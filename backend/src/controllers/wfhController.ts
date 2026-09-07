@@ -67,16 +67,12 @@ export const updateWfhStatus = async (req: AuthRequest, res: Response) => {
     const { userId, role } = req.user!;
 
     // Check if user is allowed to approve
-    if (role === 'EMPLOYEE') {
-      return res.status(403).json({ error: 'You are not authorized to review requests.' });
+    if (role === 'EMPLOYEE' || role === 'MANAGER') {
+      return res.status(403).json({ error: 'You are not authorized to review WFH requests. Only HR can approve or decline.' });
     }
 
     const request = await prisma.wfhRequest.findUnique({ where: { id }, include: { user: true } });
     if (!request) return res.status(404).json({ error: 'Request not found' });
-
-    if (role === 'MANAGER' && request.user.managerId !== userId && request.userId !== userId) {
-      return res.status(403).json({ error: 'You can only review requests for your subordinates.' });
-    }
 
     const updated = await prisma.wfhRequest.update({
       where: { id },

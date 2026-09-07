@@ -8,13 +8,14 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Attendance = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [currentRecord, setCurrentRecord] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   
   const [isCheckOutModalOpen, setIsCheckOutModalOpen] = useState(false);
   const [workNotes, setWorkNotes] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   const fetchAttendance = async () => {
     try {
@@ -22,7 +23,9 @@ const Attendance = () => {
       setAttendanceRecords(res.data);
       
       const today = new Date().toISOString().split('T')[0];
-      const todayRecord = res.data.find((r: any) => new Date(r.date).toISOString().split('T')[0] === today);
+      const todayRecord = res.data.find((r: any) => 
+        new Date(r.date).toISOString().split('T')[0] === today && r.userId === user?.id
+      );
       setCurrentRecord(todayRecord || null);
     } catch (err) {
       console.error(err);
@@ -77,6 +80,7 @@ const Attendance = () => {
   
   const isCheckedIn = currentRecord && !currentRecord.checkOutAt;
   const isCheckedOut = currentRecord && currentRecord.checkOutAt;
+  const isAdmin = hasRole('HR', 'COMPANY_ADMIN', 'SUPER_ADMIN');
 
   const formatDuration = (minutes: number) => {
     const h = Math.floor(minutes / 60);
@@ -96,58 +100,79 @@ const Attendance = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className={`grid grid-cols-1 ${isAdmin ? '' : 'md:grid-cols-2'} gap-8`}>
         {/* Check In/Out Widget */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-white shadow-sm border border-slate-200 rounded-3xl p-8 backdrop-blur-md flex flex-col items-center justify-center relative overflow-hidden h-full"
-        >
-          {isCheckedIn && <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />}
-          
-          <div className="text-5xl font-mono font-bold text-slate-900 mb-2 z-10">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </div>
-          <div className="text-slate-500 mb-8 z-10 flex items-center gap-2">
-            <Calendar size={16} />
-            {currentTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </div>
+        {!isAdmin && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-white shadow-sm border border-slate-200 rounded-3xl p-8 backdrop-blur-md flex flex-col items-center justify-center relative overflow-hidden h-full"
+          >
+            {isCheckedIn && <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />}
+            
+            <div className="text-5xl font-mono font-bold text-slate-900 mb-2 z-10">
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
+            <div className="text-slate-500 mb-8 z-10 flex items-center gap-2">
+              <Calendar size={16} />
+              {currentTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
 
-          {!isCheckedOut ? (
-            <button
-              onClick={() => isCheckedIn ? setIsCheckOutModalOpen(true) : handleCheckIn()}
-              className={`z-10 flex items-center gap-3 px-12 py-4 rounded-full font-bold text-xl transition-all shadow-xl hover:scale-105 ${
-                isCheckedIn 
-                  ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/30' 
-                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/30'
-              }`}
-            >
-              {isCheckedIn ? (
-                <><Square size={24} fill="currentColor" /> Check Out</>
-              ) : (
-                <><Play size={24} fill="currentColor" /> Check In</>
-              )}
-            </button>
-          ) : (
-             <div className="z-10 flex items-center gap-2 px-8 py-3 rounded-full font-bold text-lg bg-green-100 text-green-700">
-                <CheckCircle2 size={24} /> Shift Completed
-             </div>
-          )}
-          
-          {isCheckedIn && (
-            <p className="mt-6 text-blue-600 font-medium z-10 bg-blue-50 px-4 py-2 rounded-full text-sm">
-              You are currently clocked in.
-            </p>
-          )}
-        </motion.div>
+            {!isCheckedOut ? (
+              <button
+                onClick={() => isCheckedIn ? setIsCheckOutModalOpen(true) : handleCheckIn()}
+                className={`z-10 flex items-center gap-3 px-12 py-4 rounded-full font-bold text-xl transition-all shadow-xl hover:scale-105 ${
+                  isCheckedIn 
+                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/30' 
+                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/30'
+                }`}
+              >
+                {isCheckedIn ? (
+                  <><Square size={24} fill="currentColor" /> Check Out</>
+                ) : (
+                  <><Play size={24} fill="currentColor" /> Check In</>
+                )}
+              </button>
+            ) : (
+               <div className="z-10 flex items-center gap-2 px-8 py-3 rounded-full font-bold text-lg bg-green-100 text-green-700">
+                  <CheckCircle2 size={24} /> Shift Completed
+               </div>
+            )}
+            
+            {isCheckedIn && (
+              <p className="mt-6 text-blue-600 font-medium z-10 bg-blue-50 px-4 py-2 rounded-full text-sm">
+                You are currently clocked in.
+              </p>
+            )}
+          </motion.div>
+        )}
 
         {/* Recent History */}
-        <div className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6 backdrop-blur-md">
-          <h3 className="text-xl font-bold mb-4 text-slate-900">Recent Logs</h3>
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-            {attendanceRecords.length === 0 ? (
-              <p className="text-slate-500 text-center py-4">No recent attendance records.</p>
+        <div className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6 backdrop-blur-md flex flex-col h-full">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-slate-900">{isAdmin ? 'Company Attendance Logs' : 'Recent Logs'}</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-500">Filter:</span>
+              <input 
+                type="date" 
+                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+              />
+              {filterDate && (
+                <button onClick={() => setFilterDate('')} className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+            {attendanceRecords.filter(r => !filterDate || new Date(r.date).toISOString().split('T')[0] === filterDate).length === 0 ? (
+              <p className="text-slate-500 text-center py-4">No attendance records found.</p>
             ) : (
-              attendanceRecords.slice(0, 5).map((record) => (
+              attendanceRecords
+                .filter(r => !filterDate || new Date(r.date).toISOString().split('T')[0] === filterDate)
+                .slice(0, isAdmin ? 50 : 5)
+                .map((record) => (
                 <div key={record.id} className="flex flex-col p-4 bg-slate-50 rounded-xl border border-slate-100">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3">
@@ -155,8 +180,15 @@ const Attendance = () => {
                         {record.checkOutAt ? <CheckCircle2 size={20} /> : <Play size={20} />}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">{new Date(record.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        {isAdmin ? (
+                          <p className="font-semibold text-slate-900">{record.user?.firstName} {record.user?.lastName}</p>
+                        ) : (
+                          <p className="font-semibold text-slate-900">{new Date(record.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        )}
                         <p className="text-sm text-slate-500">
+                          {isAdmin && (
+                            <span className="mr-2 font-medium">{new Date(record.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}:</span>
+                          )}
                           {new Date(record.checkInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
                           {record.checkOutAt ? new Date(record.checkOutAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ' Now'}
                         </p>

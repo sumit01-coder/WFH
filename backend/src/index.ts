@@ -21,8 +21,15 @@ import meetingRoutes from './routes/meetingRoutes';
 import goalRoutes from './routes/goalRoutes';
 import userManagementRoutes from './routes/userManagementRoutes';
 
+import { createServer } from 'http';
+import { initSocket } from './socket';
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+const server = createServer(app);
+
+// Initialize Socket.io
+initSocket(server);
 
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
@@ -50,6 +57,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'WorkFlow Pro API is running' });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

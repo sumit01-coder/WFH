@@ -18,6 +18,7 @@ const Layout = () => {
     { name: 'Dashboard', path: '/', icon: LayoutDashboard, show: true },
     { name: 'Notifications', path: '/notifications', icon: Bell, show: true },
     { name: 'Projects', path: '/projects', icon: FolderKanban, show: true },
+    { name: 'Teams', path: '/teams', icon: Users, show: hasRole('HR', 'COMPANY_ADMIN', 'SUPER_ADMIN', 'MANAGER') },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare, show: true },
     { name: 'Chat', path: '/chat', icon: MessageSquare, show: true },
     { name: 'Meetings', path: '/meetings', icon: Calendar, show: true },
@@ -29,10 +30,21 @@ const Layout = () => {
     { name: 'Profile', path: '/profile', icon: UserCircle, show: true },
   ].filter(item => item.show);
 
+  const getRoleBadgeColor = (role: string | undefined) => {
+    switch (role) {
+      case 'SUPER_ADMIN': return 'bg-purple-100 text-purple-700';
+      case 'COMPANY_ADMIN': return 'bg-blue-100 text-blue-700';
+      case 'HR': return 'bg-pink-100 text-pink-700';
+      case 'MANAGER': return 'bg-orange-100 text-orange-700';
+      case 'EMPLOYEE': return 'bg-green-100 text-green-700';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex">
       {/* Sidebar */}
-      <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white shadow-sm border-r border-slate-200 p-4 flex flex-col hidden md:flex transition-all duration-300 relative z-20`}>
+      <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white shadow-sm border-r border-slate-200 p-4 flex flex-col hidden md:flex transition-all duration-300 relative z-50`}>
         {/* Toggle Button */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -85,8 +97,23 @@ const Layout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-y-auto">
-        <Outlet />
+      <main className="flex-1 h-screen overflow-y-auto flex flex-col relative">
+        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-3 flex justify-end items-center">
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="font-bold text-slate-900 text-sm leading-tight">{user?.firstName} {user?.lastName}</p>
+              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 uppercase ${getRoleBadgeColor(user?.role)}`}>
+                {user?.role?.replace('_', ' ')}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 uppercase">
+              {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+            </div>
+          </div>
+        </header>
+        <div className="flex-1">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

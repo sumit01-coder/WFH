@@ -1,11 +1,12 @@
-﻿import { Request, Response } from 'express';
+import { Response } from 'express';
 import prisma from '../utils/prisma';
+import { AuthRequest } from '../middleware/requireAuth';
 
-export const getProjects = async (req: Request, res: Response) => {
+export const getProjects = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId } = req.query;
+    const { companyId } = req.user!;
     const projects = await prisma.project.findMany({
-      where: { companyId: String(companyId), isArchived: false },
+      where: { companyId, isArchived: false },
       include: { team: { select: { name: true } }, manager: { select: { firstName: true, lastName: true } } }
     });
     res.json(projects);
@@ -14,9 +15,11 @@ export const getProjects = async (req: Request, res: Response) => {
   }
 };
 
-export const createProject = async (req: Request, res: Response) => {
+export const createProject = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId, name, description, clientName, managerId, teamId, status, priority, startDate, endDate } = req.body;
+    const { name, description, clientName, managerId, teamId, status, priority, startDate, endDate } = req.body;
+    const { companyId } = req.user!;
+    
     const project = await prisma.project.create({
       data: {
         companyId, name, description, clientName, managerId, teamId, status, priority,
@@ -27,5 +30,48 @@ export const createProject = async (req: Request, res: Response) => {
     res.status(201).json(project);
   } catch (error) {
     res.status(500).json({ error: 'Server error creating project' });
+  }
+};
+
+export const updateProject = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params['id'] as string;
+    const { name, description, clientName, managerId, teamId, status, priority, startDate, endDate } = req.body;
+    const { companyId, userId } = req.user!;
+
+    const existingProject = await prisma.project.findUnique({ where: { id, companyId } });
+    
+    if (!existingProject) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const updatedProject = await prisma.$transaction(async (tx: any) => {
+      const project = await tx.project.update({
+        where: { id },
+        data: {
+          name, description, clientName, managerId, teamId, status, priority,
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null
+        }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          companyId,
+          actorId: userId,
+          action: 'UPDATE_PROJECT',
+          resourceType: 'PROJECT',
+          resourceId: id,
+          oldData: existingProject as any,
+          newData: project as any
+        }
+      });
+
+      return project;
+    });
+
+    res.json(updatedProject);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error updating project' });
   }
 };

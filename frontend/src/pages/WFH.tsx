@@ -46,7 +46,7 @@ const WFH = () => {
     }
   };
 
-  const isReviewer = hasRole('HR', 'COMPANY_ADMIN', 'SUPER_ADMIN', 'MANAGER');
+  const isReviewer = hasRole('HR', 'COMPANY_ADMIN', 'SUPER_ADMIN');
 
   return (
     <div className="p-8 max-w-5xl mx-auto relative">
@@ -68,10 +68,10 @@ const WFH = () => {
 
       <div className="bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden backdrop-blur-sm">
         <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-200 text-slate-500 text-sm font-medium bg-slate-50">
-          <div className="col-span-3">Date</div>
-          <div className={`col-span-${isReviewer ? '4' : '6'}`}>Reason</div>
+          <div className="col-span-2">Date</div>
           {isReviewer && <div className="col-span-2">Employee</div>}
-          <div className="col-span-3 text-right">Status</div>
+          <div className={isReviewer ? 'col-span-6' : 'col-span-8'}>Reason</div>
+          <div className="col-span-2 text-right">Status</div>
         </div>
 
         <div className="divide-y divide-slate-100">
@@ -79,22 +79,22 @@ const WFH = () => {
             <motion.div 
               initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
               key={req.id} 
-              className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors group"
+              className="grid grid-cols-12 gap-4 p-4 items-start hover:bg-slate-50 transition-colors group"
             >
-              <div className="col-span-3 flex items-center gap-2 font-medium text-slate-900">
+              <div className="col-span-2 flex items-center gap-2 font-medium text-slate-900 mt-0.5">
                 <Calendar size={16} className="text-slate-400 group-hover:text-purple-500 transition-colors" />
                 {new Date(req.date).toLocaleDateString()}
               </div>
-              <div className={`col-span-${isReviewer ? '4' : '6'} text-slate-500 text-sm truncate`}>
-                {req.reason}
-              </div>
               {isReviewer && (
-                <div className="col-span-2 text-slate-700 text-sm font-medium truncate flex items-center gap-2">
+                <div className="col-span-2 text-slate-700 text-sm font-medium truncate flex items-center gap-2 mt-0.5">
                   <User size={14} className="text-slate-400" />
                   {req.user?.firstName} {req.user?.lastName}
                 </div>
               )}
-              <div className="col-span-3 flex justify-end items-center gap-2">
+              <div className={isReviewer ? 'col-span-6 text-slate-600 text-sm leading-relaxed pr-4' : 'col-span-8 text-slate-600 text-sm leading-relaxed pr-4'}>
+                {req.reason}
+              </div>
+              <div className="col-span-2 flex justify-end items-start gap-2">
                 <span className={`text-xs px-3 py-1 rounded-full border font-bold ${
                   req.status === 'PENDING' ? 'text-orange-600 border-orange-200 bg-orange-50' :
                   req.status === 'APPROVED' ? 'text-green-600 border-green-200 bg-green-50' :
@@ -137,7 +137,7 @@ const WFH = () => {
               <form onSubmit={handleCreate} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input required type="date" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                  <input required type="date" min={new Date().toISOString().split('T')[0]} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
                     value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
                 </div>
                 <div>

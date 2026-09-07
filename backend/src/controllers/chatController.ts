@@ -1,17 +1,13 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/requireAuth';
 import prisma from '../utils/prisma';
+import { getIO } from '../socket';
 
 export const getRooms = async (req: AuthRequest, res: Response) => {
   try {
     const { companyId, userId, role } = req.user!;
     
     let whereClause: any = { companyId };
-    
-    // HR, COMPANY_ADMIN, SUPER_ADMIN can see all rooms in the company
-    if (role === 'EMPLOYEE' || role === 'MANAGER') {
-      whereClause.members = { some: { userId } };
-    }
 
     const rooms = await prisma.chatRoom.findMany({
       where: whereClause,
@@ -23,6 +19,34 @@ export const getRooms = async (req: AuthRequest, res: Response) => {
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ error: 'Server error fetching chat rooms' });
+  }
+};
+
+export const createRoom = async (req: AuthRequest, res: Response) => {
+  try {
+    const { name } = req.body;
+    const { companyId, userId } = req.user!;
+
+    if (!name) return res.status(400).json({ error: 'Room name is required' });
+
+    const room = await prisma.chatRoom.create({
+      data: {
+        companyId,
+        type: 'TEAM',
+        name,
+        createdById: userId,
+        members: {
+          create: { userId }
+        }
+      },
+      include: {
+        members: { include: { user: { select: { firstName: true, lastName: true } } } }
+      }
+    });
+
+    res.status(201).json(room);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error creating room' });
   }
 };
 
@@ -40,11 +64,12 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Room not found' });
     }
 
-    if (role === 'EMPLOYEE' || role === 'MANAGER') {
-      const isMember = room.members.some(m => m.userId === userId);
-      if (!isMember) {
-        return res.status(403).json({ error: 'Not authorized to view messages in this room' });
-      }
+    // Anyone in the company can view messages in company channels, auto-add them as members if they aren't already
+    const isMember = room.members.some(m => m.userId === userId);
+    if (!isMember) {
+      await prisma.chatMember.create({
+        data: { roomId, userId }
+      });
     }
 
     const messages = await prisma.chatMessage.findMany({
@@ -87,6 +112,10 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
       data: { roomId, senderId: userId, content },
       include: { sender: { select: { firstName: true, lastName: true } } }
     });
+
+    // Emit real-time event to all clients in the room
+    getIO().to(roomId).emit('new_message', message);
+
     res.status(201).json(message);
   } catch (error) {
     res.status(500).json({ error: 'Server error sending message' });

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import prisma from '../utils/prisma';
 import { AuthRequest } from '../middleware/requireAuth';
+import crypto from 'crypto';
 
 export const inviteUser = async (req: AuthRequest, res: Response) => {
   try {
@@ -27,7 +28,7 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid role specified.' });
     }
 
-    const tempPassword = `Temp@${Math.floor(1000 + Math.random() * 9000)}`;
+    const tempPassword = crypto.randomBytes(6).toString('hex') + 'A1!';
     const passwordHash = await bcrypt.hash(tempPassword, 10);
 
     const newUser = await prisma.user.create({
@@ -79,7 +80,7 @@ export const listCompanyUsers = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    const formattedUsers = users.map(u => ({
+    const formattedUsers = users.map((u: any) => ({
       id: u.id,
       firstName: u.firstName,
       lastName: u.lastName,

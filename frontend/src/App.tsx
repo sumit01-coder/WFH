@@ -16,6 +16,7 @@ import Goals from './pages/Goals';
 import Employees from './pages/Employees';
 import Profile from './pages/Profile';
 import SuperAdminPanel from './pages/SuperAdminPanel';
+import Teams from './pages/Teams';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -44,6 +45,7 @@ function App() {
         <Route path="chat" element={<Chat />} />
         <Route path="meetings" element={<Meetings />} />
         <Route path="goals" element={<Goals />} />
+        <Route path="teams" element={<Teams />} />
         <Route path="employees" element={<Employees />} />
         <Route path="profile" element={<Profile />} />
         <Route path="admin" element={<SuperAdminPanel />} />
