@@ -1,0 +1,892 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String    @db.VarChar(255)
+  slug                  String    @unique @db.VarChar(100)
+  logoUrl               String?   @map("logo_url")
+  email                 String    @db.VarChar(255)
+  phone                 String?   @db.VarChar(50)
+  address               String?
+  website               String?   @db.VarChar(255)
+  timezone              String    @default("UTC") @db.VarChar(100)
+  workingDays           Json      @map("working_days") // e.g. ["MON","TUE","WED","THU","FRI"]
+  workingHoursStart     DateTime  @default(dbgenerated("'09:00:00'::time")) @map("working_hours_start") @db.Time()
+  workingHoursEnd       DateTime  @default(dbgenerated("'18:00:00'::time")) @map("working_hours_end") @db.Time()
+  breakStart            DateTime? @map("break_start") @db.Time()
+  breakEnd              DateTime? @map("break_end") @db.Time()
+  wfhDaysPerMonth       Int       @default(0) @map("wfh_days_per_month")
+  wfhRequiresApproval   Boolean   @default(true) @map("wfh_requires_approval")
+  subscriptionPlan      String    @default("free") @map("subscription_plan") @db.VarChar(50)
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at") @db.Timestamptz()
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  users               User[]
+  departments         Department[]
+  teams               Team[]
+  projects            Project[]
+  tasks               Task[]
+  assignments         Assignment[]
+  attendance          Attendance[]
+  wfhRequests         WfhRequest[]
+  leaveRequests       LeaveRequest[]
+  workReports         WorkReport[]
+  weeklyPlans         WeeklyPlan[]
+  notifications       Notification[]
+  files               File[]
+  meetings            Meeting[]
+  chatRooms           ChatRoom[]
+  goals               Goal[]
+  performanceRecords  PerformanceRecord[]
+  aiConversations     AiConversation[]
+  userRoles           UserRole[]
+  auditLogs           AuditLog[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("companies")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  permissions RolePermission[]
+  userRoles   UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(100)
+  description String?
+  resource    String   @db.VarChar(50)
+  action      String   @db.VarChar(50)
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model User {
+  id                   String    @id @default(uuid()) @db.Uuid
+  companyId            String    @map("company_id") @db.Uuid
+  employeeId           String?   @map("employee_id") @db.VarChar(50)
+  firstName            String    @map("first_name") @db.VarChar(100)
+  lastName             String    @map("last_name") @db.VarChar(100)
+  email                String    @db.VarChar(255)
+  phone                String?   @db.VarChar(50)
+  passwordHash         String    @map("password_hash") @db.VarChar(255)
+  photoUrl             String?   @map("photo_url")
+  designation          String?   @db.VarChar(150)
+  departmentId         String?   @map("department_id") @db.Uuid
+  teamId               String?   @map("team_id") @db.Uuid
+  managerId            String?   @map("manager_id") @db.Uuid
+  joiningDate          DateTime? @map("joining_date") @db.Date
+  status               String    @default("ACTIVE") @db.VarChar(30)
+  emailVerified        Boolean   @default(false) @map("email_verified")
+  emailVerifyToken     String?   @map("email_verify_token") @db.VarChar(255)
+  passwordResetToken   String?   @map("password_reset_token") @db.VarChar(255)
+  passwordResetExpires DateTime? @map("password_reset_expires") @db.Timestamptz()
+  lastLoginAt          DateTime? @map("last_login_at") @db.Timestamptz()
+  isDeleted            Boolean   @default(false) @map("is_deleted")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company       Company     @relation(fields: [companyId], references: [id])
+  department    Department? @relation(fields: [departmentId], references: [id])
+  team          Team?       @relation(fields: [teamId], references: [id])
+  manager       User?       @relation("ManagerSubordinates", fields: [managerId], references: [id])
+  subordinates  User[]      @relation("ManagerSubordinates")
+
+  userRoles               UserRole[]
+  refreshTokens           RefreshToken[]
+  managedDepartments      Department[] @relation("DepartmentHead")
+  managedTeams            Team[]       @relation("TeamLeader")
+  teamMemberships         TeamMember[]
+  projectMemberships      ProjectMember[]
+  managedProjects         Project[]    @relation("ProjectManager")
+  createdTasks            Task[]       @relation("TaskCreator")
+  assignedTasks           Task[]       @relation("TaskAssignee")
+  taskComments            TaskComment[]
+  taskHistory             TaskHistory[]
+  assignedAssignments     Assignment[] @relation("AssignmentAssignee")
+  createdAssignments      Assignment[] @relation("AssignmentAssignor")
+  assignmentSubmissions   AssignmentSubmission[]
+  assignmentReviews       AssignmentReview[]
+  attendance              Attendance[]
+  wfhRequests             WfhRequest[] @relation("WfhRequester")
+  reviewedWfhRequests     WfhRequest[] @relation("WfhReviewer")
+  leaveRequests           LeaveRequest[] @relation("LeaveRequester")
+  reviewedLeaveRequests   LeaveRequest[] @relation("LeaveReviewer")
+  workReports             WorkReport[] @relation("ReportSubmitter")
+  reviewedWorkReports     WorkReport[] @relation("ReportReviewer")
+  weeklyPlans             WeeklyPlan[]
+  notifications           Notification[]
+  uploadedFiles           File[]
+  organizedMeetings       Meeting[]    @relation("MeetingOrganizer")
+  meetingParticipations   MeetingParticipant[]
+  writtenMeetingNotes     MeetingNote[]
+  createdChatRooms        ChatRoom[]   @relation("ChatRoomCreator")
+  chatMemberships         ChatMember[]
+  chatMessages            ChatMessage[]
+  createdGoals            Goal[]       @relation("GoalCreator")
+  assignedGoals           Goal[]       @relation("GoalAssignee")
+  performanceRecords      PerformanceRecord[]
+  aiConversations         AiConversation[]
+  auditLogs               AuditLog[]
+
+  @@unique([companyId, email])
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([teamId])
+  @@index([managerId])
+  @@index([status])
+  @@index([email])
+  @@map("users")
+}
+
+model UserRole {
+  userId    String @map("user_id") @db.Uuid
+  roleId    String @map("role_id") @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz()
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model Department {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  name        String   @db.VarChar(150)
+  description String?
+  headId      String?  @map("head_id") @db.Uuid
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  head    User?   @relation("DepartmentHead", fields: [headId], references: [id])
+  teams   Team[]
+  users   User[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([headId])
+  @@map("departments")
+}
+
+model Team {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  departmentId String   @map("department_id") @db.Uuid
+  name         String   @db.VarChar(150)
+  description  String?
+  leaderId     String?  @map("leader_id") @db.Uuid
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company    Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  leader     User?        @relation("TeamLeader", fields: [leaderId], references: [id])
+  members    TeamMember[]
+  users      User[]
+  projects   Project[]
+  chatRooms  ChatRoom[]
+  goals      Goal[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([leaderId])
+  @@map("teams")
+}
+
+model TeamMember {
+  teamId   String   @map("team_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz()
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+  @@map("team_members")
+}
+
+model Project {
+  id          String    @id @default(uuid()) @db.Uuid
+  companyId   String    @map("company_id") @db.Uuid
+  name        String    @db.VarChar(255)
+  description String?
+  clientName  String?   @map("client_name") @db.VarChar(255)
+  managerId   String?   @map("manager_id") @db.Uuid
+  teamId      String?   @map("team_id") @db.Uuid
+  status      String    @default("PLANNING") @db.VarChar(30)
+  priority    String    @default("MEDIUM") @db.VarChar(20)
+  startDate   DateTime? @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  isArchived  Boolean   @default(false) @map("is_archived")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company   Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  manager   User?           @relation("ProjectManager", fields: [managerId], references: [id])
+  team      Team?           @relation(fields: [teamId], references: [id])
+  members   ProjectMember[]
+  tasks     Task[]
+  assignments Assignment[]
+  chatRooms ChatRoom[]
+  meetings  Meeting[]
+
+  @@index([companyId])
+  @@index([managerId])
+  @@index([teamId])
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      String   @default("MEMBER") @db.VarChar(50)
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz()
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@map("project_members")
+}
+
+model Task {
+  id             String    @id @default(uuid()) @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  projectId      String?   @map("project_id") @db.Uuid
+  parentTaskId   String?   @map("parent_task_id") @db.Uuid
+  title          String    @db.VarChar(500)
+  description    String?
+  assigneeId     String?   @map("assignee_id") @db.Uuid
+  createdById    String    @map("created_by_id") @db.Uuid
+  status         String    @default("TODO") @db.VarChar(30)
+  priority       String    @default("MEDIUM") @db.VarChar(20)
+  labels         String[]  @default([])
+  startDate      DateTime? @map("start_date") @db.Date
+  dueDate        DateTime? @map("due_date") @db.Date
+  estimatedHours Decimal?  @map("estimated_hours") @db.Decimal(5, 2)
+  actualHours    Decimal?  @map("actual_hours") @db.Decimal(5, 2)
+  checklist      Json      @default("[]")
+  isArchived     Boolean   @default(false) @map("is_archived")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company      Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project      Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentTask   Task?               @relation("SubTasks", fields: [parentTaskId], references: [id])
+  subTasks     Task[]              @relation("SubTasks")
+  assignee     User?               @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy    User                @relation("TaskCreator", fields: [createdById], references: [id])
+  comments     TaskComment[]
+  history      TaskHistory[]
+  dependencies TaskDependency[]    @relation("DependsOn")
+  blocking     TaskDependency[]    @relation("Blocks")
+
+  @@index([companyId])
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([parentTaskId])
+  @@map("tasks")
+}
+
+model TaskDependency {
+  taskId       String @map("task_id") @db.Uuid
+  dependsOnId  String @map("depends_on_id") @db.Uuid
+
+  task      Task @relation("DependsOn", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOn Task @relation("Blocks", fields: [dependsOnId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, dependsOnId])
+  @@map("task_dependencies")
+}
+
+model TaskComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  content   String
+  isEdited  Boolean  @default(false) @map("is_edited")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([userId])
+  @@map("task_comments")
+}
+
+model TaskHistory {
+  id          String   @id @default(uuid()) @db.Uuid
+  taskId      String   @map("task_id") @db.Uuid
+  changedById String   @map("changed_by_id") @db.Uuid
+  fieldName   String   @map("field_name") @db.VarChar(100)
+  oldValue    String?  @map("old_value")
+  newValue    String?  @map("new_value")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  task      Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  changedBy User @relation(fields: [changedById], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("task_history")
+}
+
+model Assignment {
+  id             String    @id @default(uuid()) @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  projectId      String?   @map("project_id") @db.Uuid
+  title          String    @db.VarChar(500)
+  description    String?
+  instructions   String?
+  assignedToId   String    @map("assigned_to_id") @db.Uuid
+  assignedById   String    @map("assigned_by_id") @db.Uuid
+  status         String    @default("ASSIGNED") @db.VarChar(30)
+  priority       String    @default("MEDIUM") @db.VarChar(20)
+  startDate      DateTime? @map("start_date") @db.Date
+  dueDate        DateTime? @map("due_date") @db.Date
+  estimatedHours Decimal?  @map("estimated_hours") @db.Decimal(5, 2)
+  requiredFiles  Json      @default("[]") @map("required_files")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company      Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project      Project?               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedTo   User                   @relation("AssignmentAssignee", fields: [assignedToId], references: [id])
+  assignedBy   User                   @relation("AssignmentAssignor", fields: [assignedById], references: [id])
+  submissions  AssignmentSubmission[]
+
+  @@index([companyId])
+  @@index([projectId])
+  @@index([assignedToId])
+  @@index([assignedById])
+  @@index([status])
+  @@index([dueDate])
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id            String   @id @default(uuid()) @db.Uuid
+  assignmentId  String   @map("assignment_id") @db.Uuid
+  submittedById String   @map("submitted_by_id") @db.Uuid
+  version       Int      @default(1)
+  notes         String?
+  submittedAt   DateTime @default(now()) @map("submitted_at") @db.Timestamptz()
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  assignment  Assignment         @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submittedBy User               @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  reviews     AssignmentReview[]
+
+  @@index([assignmentId])
+  @@index([submittedById])
+  @@map("assignment_submissions")
+}
+
+model AssignmentReview {
+  id           String   @id @default(uuid()) @db.Uuid
+  assignmentId String   @map("assignment_id") @db.Uuid
+  submissionId String   @map("submission_id") @db.Uuid
+  reviewedById String   @map("reviewed_by_id") @db.Uuid
+  verdict      String   @db.VarChar(30)
+  comments     String?
+  reviewedAt   DateTime @default(now()) @map("reviewed_at") @db.Timestamptz()
+
+  assignment  Assignment           @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submission  AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewedBy  User                 @relation(fields: [reviewedById], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+  @@index([submissionId])
+  @@map("assignment_reviews")
+}
+
+model Attendance {
+  id               String    @id @default(uuid()) @db.Uuid
+  companyId        String    @map("company_id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  date             DateTime  @db.Date
+  checkInAt        DateTime? @map("check_in_at") @db.Timestamptz()
+  checkOutAt       DateTime? @map("check_out_at") @db.Timestamptz()
+  totalMinutes     Int?      @map("total_minutes")
+  breakMinutes     Int?      @map("break_minutes")
+  overtimeMinutes  Int?      @map("overtime_minutes")
+  status           String    @default("PRESENT") @db.VarChar(30)
+  isLate           Boolean   @default(false) @map("is_late")
+  isEarlyCheckout  Boolean   @default(false) @map("is_early_checkout")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  breaks  AttendanceBreak[]
+
+  @@unique([userId, date])
+  @@index([companyId])
+  @@index([userId])
+  @@index([date])
+  @@map("attendance")
+}
+
+model AttendanceBreak {
+  id              String    @id @default(uuid()) @db.Uuid
+  attendanceId    String    @map("attendance_id") @db.Uuid
+  breakStart      DateTime  @map("break_start") @db.Timestamptz()
+  breakEnd        DateTime? @map("break_end") @db.Timestamptz()
+  durationMinutes Int?      @map("duration_minutes")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  attendance Attendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+
+  @@index([attendanceId])
+  @@map("attendance_breaks")
+}
+
+model WfhRequest {
+  id             String    @id @default(uuid()) @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  date           DateTime  @db.Date
+  reason         String
+  workLocation   String?   @map("work_location") @db.VarChar(255)
+  notes          String?
+  status         String    @default("PENDING") @db.VarChar(20)
+  reviewedById   String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt     DateTime? @map("reviewed_at") @db.Timestamptz()
+  reviewRemarks  String?   @map("review_remarks")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user       User    @relation("WfhRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User?   @relation("WfhReviewer", fields: [reviewedById], references: [id])
+
+  @@unique([userId, date])
+  @@index([companyId])
+  @@index([userId])
+  @@index([date])
+  @@index([status])
+  @@map("wfh_requests")
+}
+
+model LeaveRequest {
+  id             String    @id @default(uuid()) @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  leaveType      String    @map("leave_type") @db.VarChar(50)
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime  @map("end_date") @db.Date
+  reason         String?
+  status         String    @default("PENDING") @db.VarChar(20)
+  reviewedById   String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt     DateTime? @map("reviewed_at") @db.Timestamptz()
+  reviewRemarks  String?   @map("review_remarks")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user       User    @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User?   @relation("LeaveReviewer", fields: [reviewedById], references: [id])
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([status])
+  @@index([startDate])
+  @@map("leave_requests")
+}
+
+model WorkReport {
+  id             String    @id @default(uuid()) @db.Uuid
+  companyId      String    @map("company_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  date           DateTime  @db.Date
+  completedWork  String    @map("completed_work")
+  wip            String?
+  blockers       String?
+  tomorrowPlan   String?   @map("tomorrow_plan")
+  hoursWorked    Decimal?  @map("hours_worked") @db.Decimal(4, 2)
+  status         String    @default("DRAFT") @db.VarChar(30)
+  reviewedById   String?   @map("reviewed_by_id") @db.Uuid
+  reviewComments String?   @map("review_comments")
+  reviewedAt     DateTime? @map("reviewed_at") @db.Timestamptz()
+  isAiGenerated  Boolean   @default(false) @map("is_ai_generated")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user       User    @relation("ReportSubmitter", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User?   @relation("ReportReviewer", fields: [reviewedById], references: [id])
+
+  @@unique([userId, date])
+  @@index([companyId])
+  @@index([userId])
+  @@index([date])
+  @@index([status])
+  @@map("work_reports")
+}
+
+model WeeklyPlan {
+  id            String   @id @default(uuid()) @db.Uuid
+  companyId     String   @map("company_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  weekStartDate DateTime @map("week_start_date") @db.Date
+  plan          Json
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStartDate])
+  @@index([companyId])
+  @@index([userId])
+  @@index([weekStartDate])
+  @@map("weekly_plans")
+}
+
+model Notification {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  type         String   @db.VarChar(50)
+  title        String   @db.VarChar(255)
+  body         String?
+  resourceType String?  @map("resource_type") @db.VarChar(50)
+  resourceId   String?  @map("resource_id") @db.Uuid
+  isRead       Boolean  @default(false) @map("is_read")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model File {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  uploadedById String   @map("uploaded_by_id") @db.Uuid
+  resourceType String   @map("resource_type") @db.VarChar(50)
+  resourceId   String   @map("resource_id") @db.Uuid
+  originalName String   @map("original_name") @db.VarChar(500)
+  storedName   String   @map("stored_name") @db.VarChar(500)
+  filePath     String   @map("file_path")
+  mimeType     String   @map("mime_type") @db.VarChar(100)
+  sizeBytes    BigInt   @map("size_bytes")
+  version      Int      @default(1)
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  company    Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  uploadedBy User          @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  messages   ChatMessage[]
+
+  @@index([companyId])
+  @@index([resourceType])
+  @@index([resourceId])
+  @@index([uploadedById])
+  @@map("files")
+}
+
+model Meeting {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  projectId   String?  @map("project_id") @db.Uuid
+  title       String   @db.VarChar(500)
+  description String?
+  organizerId String   @map("organizer_id") @db.Uuid
+  startAt     DateTime @map("start_at") @db.Timestamptz()
+  endAt       DateTime @map("end_at") @db.Timestamptz()
+  location    String?  @db.VarChar(255)
+  status      String   @default("SCHEDULED") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company      Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project      Project?             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organizer    User                 @relation("MeetingOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+  participants MeetingParticipant[]
+  notes        MeetingNote[]
+
+  @@index([companyId])
+  @@index([organizerId])
+  @@index([startAt])
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  meetingId String @map("meeting_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  rsvp      String @default("PENDING") @db.VarChar(20)
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, userId])
+  @@map("meeting_participants")
+}
+
+model MeetingNote {
+  id          String   @id @default(uuid()) @db.Uuid
+  meetingId   String   @map("meeting_id") @db.Uuid
+  writtenById String   @map("written_by_id") @db.Uuid
+  content     String
+  actionItems Json     @default("[]") @map("action_items")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  writtenBy User    @relation(fields: [writtenById], references: [id], onDelete: Cascade)
+
+  @@map("meeting_notes")
+}
+
+model ChatRoom {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  type        String   @db.VarChar(20) // DIRECT, TEAM, PROJECT
+  name        String?  @db.VarChar(255)
+  teamId      String?  @map("team_id") @db.Uuid
+  projectId   String?  @map("project_id") @db.Uuid
+  createdById String   @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  company   Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  team      Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  project   Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User          @relation("ChatRoomCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  members   ChatMember[]
+  messages  ChatMessage[]
+
+  @@index([companyId])
+  @@index([type])
+  @@map("chat_rooms")
+}
+
+model ChatMember {
+  roomId     String    @map("room_id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  joinedAt   DateTime  @default(now()) @map("joined_at") @db.Timestamptz()
+  lastReadAt DateTime? @map("last_read_at") @db.Timestamptz()
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@map("chat_members")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  roomId    String   @map("room_id") @db.Uuid
+  senderId  String   @map("sender_id") @db.Uuid
+  content   String?
+  type      String   @default("TEXT") @db.VarChar(20) // TEXT, FILE, SYSTEM
+  fileId    String?  @map("file_id") @db.Uuid
+  mentions  String[] @default([]) @db.Uuid
+  isEdited  Boolean  @default(false) @map("is_edited")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  file   File?    @relation(fields: [fileId], references: [id])
+
+  @@index([roomId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+model Goal {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  createdById  String   @map("created_by_id") @db.Uuid
+  assignedToId String?  @map("assigned_to_id") @db.Uuid // NULL = team goal
+  teamId       String?  @map("team_id") @db.Uuid // NULL = individual goal
+  title        String   @db.VarChar(500)
+  description  String?
+  targetValue  Decimal  @map("target_value") @db.Decimal(10, 2)
+  currentValue Decimal  @default(0) @map("current_value") @db.Decimal(10, 2)
+  unit         String   @db.VarChar(50)
+  period       String   @db.VarChar(20) // WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  startDate    DateTime @map("start_date") @db.Date
+  endDate      DateTime @map("end_date") @db.Date
+  status       String   @default("ACTIVE") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy  User    @relation("GoalCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  assignedTo User?   @relation("GoalAssignee", fields: [assignedToId], references: [id])
+  team       Team?   @relation(fields: [teamId], references: [id])
+
+  @@index([companyId])
+  @@index([assignedToId])
+  @@index([teamId])
+  @@index([status])
+  @@map("goals")
+}
+
+model PerformanceRecord {
+  id                   String   @id @default(uuid()) @db.Uuid
+  companyId            String   @map("company_id") @db.Uuid
+  userId               String   @map("user_id") @db.Uuid
+  period               String   @db.VarChar(20) // WEEKLY, MONTHLY
+  periodStart          DateTime @map("period_start") @db.Date
+  periodEnd            DateTime @map("period_end") @db.Date
+  tasksCompleted       Int      @default(0) @map("tasks_completed")
+  tasksOnTime          Int      @default(0) @map("tasks_on_time")
+  tasksOverdue         Int      @default(0) @map("tasks_overdue")
+  assignmentsCompleted Int      @default(0) @map("assignments_completed")
+  assignmentsRework    Int      @default(0) @map("assignments_rework")
+  reportsSubmitted     Int      @default(0) @map("reports_submitted")
+  reportsExpected      Int      @default(0) @map("reports_expected")
+  attendanceDays       Int      @default(0) @map("attendance_days")
+  wfhDays              Int      @default(0) @map("wfh_days")
+  computedScore        Decimal? @map("computed_score") @db.Decimal(5, 2)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period, periodStart])
+  @@index([companyId])
+  @@index([userId])
+  @@index([periodStart])
+  @@map("performance_records")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String?  @map("company_id") @db.Uuid
+  actorId      String   @map("actor_id") @db.Uuid
+  action       String   @db.VarChar(100)
+  resourceType String?  @map("resource_type") @db.VarChar(50)
+  resourceId   String?  @map("resource_id") @db.Uuid
+  oldData      Json?    @map("old_data")
+  newData      Json?    @map("new_data")
+  ipAddress    String?  @map("ip_address") @db.VarChar(50)
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  actor   User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([actorId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model AiConversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String?  @db.VarChar(255)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company  Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([companyId])
+  @@index([userId])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  role           String   @db.VarChar(20) // user, assistant, tool
+  content        String?
+  tokenCount     Int?     @map("token_count")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  toolCalls    AiToolCall[]
+
+  @@index([conversationId])
+  @@map("ai_messages")
+}
+
+model AiToolCall {
+  id          String   @id @default(uuid()) @db.Uuid
+  messageId   String   @map("message_id") @db.Uuid
+  toolName    String   @map("tool_name") @db.VarChar(100)
+  input       Json
+  output      Json?
+  status      String   @default("PENDING") @db.VarChar(20) // PENDING, SUCCESS, ERROR
+  error       String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  message AiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("ai_tool_calls")
+}
