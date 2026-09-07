@@ -42,6 +42,22 @@ The primary purpose of **WorkFlowPro** is to centralize and simplify the operati
 
 ---
 
+## 🏢 Industry & Market Positioning
+
+While the market is saturated with specialized tools—such as **Jira / Asana** for project management, **BambooHR / Gusto** for HR and attendance, and **Slack / Microsoft Teams** for communication—**WorkFlowPro** sits uniquely at the intersection of these domains.
+
+### Current Project Level
+WorkFlowPro is currently at an **Enterprise MVP (Minimum Viable Product)** stage. It successfully consolidates core functionalities that a mid-sized remote organization needs into a single pane of glass.
+
+### Comparison to Existing Market Giants
+- **Versus HR Software (e.g., BambooHR)**: WorkFlowPro includes attendance and leave tracking but adds direct operational features like Task and Project management which pure HR tools lack.
+- **Versus Project Management (e.g., Jira/Linear)**: WorkFlowPro keeps task management simple and accessible for all employees, avoiding the steep learning curve and feature bloat of tools like Jira, while integrating presence (attendance/WFH) directly into the workflow.
+- **Versus Communication (e.g., Slack)**: WorkFlowPro offers basic real-time team chat, contextualizing communication around projects and teams, rather than replacing general-purpose enterprise chat entirely.
+
+**Target Audience**: Startups, digital agencies, and SMEs (Small to Medium Enterprises) of 10-200 employees who want to reduce software subscription fatigue by replacing 3-4 separate SaaS products with one cohesive ecosystem.
+
+---
+
 ## ✨ Features
 
 - **🔐 Role-Based Access Control**: Hierarchical roles (Super Admin, Company Admin, HR, Manager, Employee) ensure secure and structured access to sensitive data.
