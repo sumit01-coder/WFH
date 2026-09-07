@@ -410,6 +410,7 @@ model Assignment {
   assignedTo   User                   @relation("AssignmentAssignee", fields: [assignedToId], references: [id])
   assignedBy   User                   @relation("AssignmentAssignor", fields: [assignedById], references: [id])
   submissions  AssignmentSubmission[]
+  reviews      AssignmentReview[]
 
   @@index([companyId])
   @@index([projectId])

@@ -8,6 +8,6 @@
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading text-primary;
+    @apply font-sans font-bold text-primary;
   }
 }
