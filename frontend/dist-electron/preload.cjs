@@ -21,3 +21,13 @@ contextBridge.exposeInMainWorld('desktopMonitor', {
   stop: () => ipcRenderer.send('monitor:stop'),
   isElectron: true,
 })
+
+// Desktop Auto Updater bridge
+contextBridge.exposeInMainWorld('desktopUpdater', {
+  checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+  installUpdate: () => ipcRenderer.send('install-update'),
+  onUpdaterMessage: (callback) => {
+    ipcRenderer.on('updater-message', (event, data) => callback(data))
+  },
+  removeListeners: () => ipcRenderer.removeAllListeners('updater-message')
+})

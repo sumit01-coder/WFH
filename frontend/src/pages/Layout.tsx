@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatures } from '../contexts/FeaturesContext';
+import { DesktopUpdater } from '../components/DesktopUpdater';
 import { 
   LogOut, LayoutDashboard, Users, FolderKanban, CheckSquare, Settings, Clock, Home, 
   Bell, MessageSquare, Calendar, Target, ChevronLeft, ChevronRight, UserCircle, 
@@ -102,6 +103,7 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white flex overflow-hidden">
+      <DesktopUpdater />
       {/* Sidebar */}
       <aside className={`${isCollapsed ? 'w-20' : 'w-72'} bg-white dark:bg-slate-900 shadow-sm border-r border-slate-200 dark:border-slate-800 flex flex-col hidden md:flex transition-all duration-300 relative z-50 h-screen`}>
         {/* Toggle Button */}

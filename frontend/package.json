@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "electron:build": "vite build && copy electron\\preload.cjs dist-electron\\preload.cjs && copy electron\\monitor.cjs dist-electron\\monitor.cjs && electron-builder"
+    "electron:build": "vite build && copy electron\\preload.cjs dist-electron\\preload.cjs && copy electron\\monitor.cjs dist-electron\\monitor.cjs && electron-builder",
+    "electron:publish": "vite build && copy electron\\preload.cjs dist-electron\\preload.cjs && copy electron\\monitor.cjs dist-electron\\monitor.cjs && electron-builder --publish always"
   },
   "build": {
     "appId": "com.workflowpro.app",
@@ -21,11 +22,20 @@
     "extraResources": [],
     "win": {
       "target": "nsis"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "sumit01-coder",
+        "repo": "WFH"
+      }
+    ]
   },
   "dependencies": {
     "active-win": "^8.2.1",
     "axios": "^1.20.0",
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.9",
     "framer-motion": "^13.2.0",
     "lucide-react": "^1.41.0",
     "react": "^19.2.8",

@@ -3,6 +3,9 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
+import { ipcMain } from 'electron'
+import { autoUpdater } from 'electron-updater'
+import log from 'electron-log'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -32,13 +35,50 @@ function createWindow() {
   })
 
   // Open the DevTools to debug the blank screen
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
 
+  // Auto-updater configuration
+  log.transports.file.level = "info";
+  autoUpdater.logger = log;
 
+  autoUpdater.on('checking-for-update', () => {
+    win?.webContents.send('updater-message', { status: 'checking' })
+  });
 
-  // Test active push message to Renderer-process.
+  autoUpdater.on('update-available', (info) => {
+    win?.webContents.send('updater-message', { status: 'update-available', info })
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    win?.webContents.send('updater-message', { status: 'update-not-available', info })
+  });
+
+  autoUpdater.on('error', (err) => {
+    win?.webContents.send('updater-message', { status: 'error', error: err.message })
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    win?.webContents.send('updater-message', { 
+      status: 'downloading', 
+      percent: progressObj.percent, 
+      bytesPerSecond: progressObj.bytesPerSecond,
+      transferred: progressObj.transferred,
+      total: progressObj.total 
+    })
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    win?.webContents.send('updater-message', { status: 'update-downloaded', info })
+  });
+
+  // Check for updates shortly after window loads
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
+    if (process.env.NODE_ENV !== 'development' && !VITE_DEV_SERVER_URL) {
+      setTimeout(() => {
+        autoUpdater.checkForUpdatesAndNotify()
+      }, 3000);
+    }
   })
 
   if (VITE_DEV_SERVER_URL) {
@@ -66,3 +106,12 @@ app.whenReady().then(createWindow)
 
 // Initialize the activity monitor IPC handlers
 require('./monitor.cjs')
+
+// Update-related IPC handlers
+ipcMain.on('check-for-updates', () => {
+  autoUpdater.checkForUpdatesAndNotify()
+})
+
+ipcMain.on('install-update', () => {
+  autoUpdater.quitAndInstall()
+})
