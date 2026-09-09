@@ -7,7 +7,9 @@ export interface User {
   id: string;
   email: string;
   firstName: string;
+  lastName: string;
   companyId: string;
+  companyName?: string;
   role: UserRole;
   isSuperAdmin?: boolean;
 }
@@ -31,12 +33,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const [token, setToken] = useState<string | null>(() => {
     const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+    }
     return storedToken ? storedToken : null;
   });
 
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
     }
   }, [token]);
 
@@ -58,7 +65,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const hasRole = (...roles: UserRole[]) => {
     if (!user) return false;
-    if (user.isSuperAdmin) return true;
     return roles.includes(user.role);
   };
 

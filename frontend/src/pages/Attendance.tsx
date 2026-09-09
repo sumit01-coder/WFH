@@ -8,13 +8,14 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Attendance = () => {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, token } = useAuth();
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [currentRecord, setCurrentRecord] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   
   const [isCheckOutModalOpen, setIsCheckOutModalOpen] = useState(false);
   const [workNotes, setWorkNotes] = useState('');
+  const [worklogFile, setWorklogFile] = useState<File | null>(null);
   const [filterDate, setFilterDate] = useState('');
 
   const fetchAttendance = async () => {
@@ -45,6 +46,12 @@ const Attendance = () => {
         time: new Date().toISOString()
       });
       setCurrentRecord(res.data);
+      
+      // Start desktop monitoring if inside Electron app
+      if ((window as any).desktopMonitor && token) {
+        (window as any).desktopMonitor.start(token);
+      }
+      
       fetchAttendance();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to check in');
@@ -65,18 +72,34 @@ const Attendance = () => {
     const systemLog = `\n\n[System Log: App Active for ${activeH}h ${activeM}m, Idle for ${idleH}h ${idleM}m]`;
     
     try {
-      await axios.patch(`${API_URL}/attendance/${currentRecord.id}/checkout`, {
-        time: new Date().toISOString(),
-        notes: workNotes + systemLog
+      const formData = new FormData();
+      formData.append('time', new Date().toISOString());
+      formData.append('notes', workNotes + systemLog);
+      if (worklogFile) {
+        formData.append('worklog_attachment', worklogFile);
+      }
+
+      await axios.patch(`${API_URL}/attendance/${currentRecord.id}/checkout`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
+      
+      // Stop desktop monitoring
+      if ((window as any).desktopMonitor) {
+        (window as any).desktopMonitor.stop();
+      }
+
       setIsCheckOutModalOpen(false);
       setWorkNotes('');
+      setWorklogFile(null);
       resetTracker();
       fetchAttendance();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to check out');
     }
   };
+
   
   const isCheckedIn = currentRecord && !currentRecord.checkOutAt;
   const isCheckedOut = currentRecord && currentRecord.checkOutAt;
@@ -92,11 +115,11 @@ const Attendance = () => {
     <div className="p-8 max-w-5xl mx-auto relative">
       <header className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-3xl font-bold flex items-center gap-3 text-slate-900">
+          <h2 className="text-3xl font-bold flex items-center gap-3 text-slate-900 dark:text-white">
             <Clock className="text-blue-500" size={32} />
             Attendance
           </h2>
-          <p className="text-slate-500 mt-1">Track your daily working hours and submit your work log.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Track your daily working hours and submit your work log.</p>
         </div>
       </header>
 
@@ -105,14 +128,14 @@ const Attendance = () => {
         {!isAdmin && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-white shadow-sm border border-slate-200 rounded-3xl p-8 backdrop-blur-md flex flex-col items-center justify-center relative overflow-hidden h-full"
+            className="bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-3xl p-8 backdrop-blur-md flex flex-col items-center justify-center relative overflow-hidden h-full"
           >
             {isCheckedIn && <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />}
             
-            <div className="text-5xl font-mono font-bold text-slate-900 mb-2 z-10">
+            <div className="text-5xl font-mono font-bold text-slate-900 dark:text-white mb-2 z-10">
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </div>
-            <div className="text-slate-500 mb-8 z-10 flex items-center gap-2">
+            <div className="text-slate-500 dark:text-slate-400 mb-8 z-10 flex items-center gap-2">
               <Calendar size={16} />
               {currentTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
@@ -147,14 +170,14 @@ const Attendance = () => {
         )}
 
         {/* Recent History */}
-        <div className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6 backdrop-blur-md flex flex-col h-full">
+        <div className="bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-3xl p-6 backdrop-blur-md flex flex-col h-full">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-slate-900">{isAdmin ? 'Company Attendance Logs' : 'Recent Logs'}</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{isAdmin ? 'Company Attendance Logs' : 'Recent Logs'}</h3>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-500">Filter:</span>
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Filter:</span>
               <input 
                 type="date" 
-                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
+                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
               />
@@ -167,13 +190,13 @@ const Attendance = () => {
           </div>
           <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
             {attendanceRecords.filter(r => !filterDate || new Date(r.date).toISOString().split('T')[0] === filterDate).length === 0 ? (
-              <p className="text-slate-500 text-center py-4">No attendance records found.</p>
+              <p className="text-slate-500 dark:text-slate-400 text-center py-4">No attendance records found.</p>
             ) : (
               attendanceRecords
                 .filter(r => !filterDate || new Date(r.date).toISOString().split('T')[0] === filterDate)
                 .slice(0, isAdmin ? 50 : 5)
                 .map((record) => (
-                <div key={record.id} className="flex flex-col p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div key={record.id} className="flex flex-col p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${record.checkOutAt ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -181,11 +204,11 @@ const Attendance = () => {
                       </div>
                       <div>
                         {isAdmin ? (
-                          <p className="font-semibold text-slate-900">{record.user?.firstName} {record.user?.lastName}</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{record.user?.firstName} {record.user?.lastName}</p>
                         ) : (
-                          <p className="font-semibold text-slate-900">{new Date(record.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{new Date(record.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                         )}
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           {isAdmin && (
                             <span className="mr-2 font-medium">{new Date(record.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}:</span>
                           )}
@@ -202,7 +225,7 @@ const Attendance = () => {
                     )}
                   </div>
                   {record.notes && (
-                    <div className="mt-2 text-sm text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
+                    <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                       <span className="font-semibold block mb-1">Work Log:</span>
                       {record.notes}
                     </div>
@@ -219,10 +242,10 @@ const Attendance = () => {
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-200"
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-800"
             >
-              <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50">
-                <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900">
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
                   <ClipboardList className="text-blue-500" size={24} /> 
                   Submit Work Log
                 </h3>
@@ -230,7 +253,7 @@ const Attendance = () => {
               </div>
               
               <form onSubmit={handleCheckOutSubmit} className="p-6">
-                <p className="text-sm text-slate-500 mb-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                   Before you check out, please log the work you completed during this session. This will be saved to your attendance record.
                 </p>
                 <div>
@@ -238,8 +261,19 @@ const Attendance = () => {
                     required 
                     rows={5} 
                     placeholder="e.g., Finished the landing page design, fixed 2 bugs in the backend API, and had a sync with the marketing team."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
                     value={workNotes} onChange={e => setWorkNotes(e.target.value)} 
+                  />
+                </div>
+                
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Attach Work (Optional)
+                  </label>
+                  <input 
+                    type="file" 
+                    onChange={e => setWorklogFile(e.target.files ? e.target.files[0] : null)}
+                    className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50 transition-colors"
                   />
                 </div>
 
@@ -247,7 +281,7 @@ const Attendance = () => {
                   <button 
                     type="button"
                     onClick={() => setIsCheckOutModalOpen(false)}
-                    className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 transition-colors"
                   >
                     Cancel
                   </button>

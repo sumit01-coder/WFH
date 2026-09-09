@@ -1,0 +1,32 @@
+feat: security hardening, notifications system, and UX improvements
+
+Security:
+- Add helmet security headers to all HTTP responses
+- Add express-rate-limit (20 req/15min on auth, 300 req/min global)
+- Fix IDOR vulnerability in company routes - use JWT companyId instead of URL param
+- Add requireAuth + requireRole middleware to all company routes
+- Secure WebSocket (Socket.IO) with JWT authentication on connection
+- Verify chat room membership before allowing socket join_room
+- Add production startup check for weak JWT secrets
+- Fix CORS wildcard fallback - use explicit FRONTEND_URL
+
+Notifications System:
+- Wire real notification triggers in projectController (manager on creation)
+- Wire real notification triggers in taskController (assignee on new task)
+- Wire real notification triggers in leaveController (HR on submit, employee on decision)
+- Wire real notification triggers in wfhController (HR/manager on submit, employee on decision)
+- Rewrite notificationController with AuthRequest, add getUnreadCount endpoint
+- Secure notificationRoutes with requireAuth middleware
+- Rewrite Notifications.tsx: live API data, filter tabs, relative timestamps,
+  mark-as-read on click, mark-all-read, loading skeleton, empty state, refresh btn
+
+Login / Desktop App:
+- Add server connectivity check on Login page load (polls every 10s)
+- Show color-coded server status pill (checking/online/offline) with Retry button
+- Disable Sign In button while checking or when server is offline
+- Distinguish network errors from auth errors in login error messages
+
+Bug Fixes:
+- Fix NodeJS.Timeout type error in Chat.tsx -> use ReturnType<typeof setTimeout>
+- Pass JWT token in Socket.IO auth handshake from Chat.tsx
+- Add body size limit (2mb) to express.json() middleware

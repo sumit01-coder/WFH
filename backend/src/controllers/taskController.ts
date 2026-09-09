@@ -95,6 +95,21 @@ export const createTask = async (req: AuthRequest, res: Response) => {
       },
       include: { assignee: { select: { firstName: true, lastName: true } } }
     });
+
+    if (assigneeId && assigneeId !== userId) {
+      await prisma.notification.create({
+        data: {
+          companyId,
+          userId: assigneeId,
+          type: 'TASK',
+          title: 'New Task Assigned',
+          body: `You have been assigned to task: ${title}`,
+          resourceType: 'TASK',
+          resourceId: task.id
+        }
+      });
+    }
+
     res.status(201).json(task);
   } catch (error) {
     res.status(500).json({ error: 'Server error creating task' });

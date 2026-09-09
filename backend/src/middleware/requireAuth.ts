@@ -3,6 +3,7 @@ import { verifyAccessToken } from '../utils/jwt';
 
 export interface AuthRequest extends Request {
   user?: { userId: string; companyId: string; role: string; isSuperAdmin: boolean };
+  params: Record<string, string>;
 }
 
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction) => {

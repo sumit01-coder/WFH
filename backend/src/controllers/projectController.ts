@@ -27,6 +27,21 @@ export const createProject = async (req: AuthRequest, res: Response) => {
         endDate: endDate ? new Date(endDate) : null
       }
     });
+
+    if (managerId && managerId !== req.user!.userId) {
+      await prisma.notification.create({
+        data: {
+          companyId,
+          userId: managerId,
+          type: 'PROJECT',
+          title: 'New Project Assigned',
+          body: `You have been assigned as the manager for project: ${name}`,
+          resourceType: 'PROJECT',
+          resourceId: project.id
+        }
+      });
+    }
+
     res.status(201).json(project);
   } catch (error) {
     res.status(500).json({ error: 'Server error creating project' });

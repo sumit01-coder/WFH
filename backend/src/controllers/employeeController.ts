@@ -1,23 +1,47 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/requireAuth';
 import prisma from '../utils/prisma';
 import bcrypt from 'bcrypt';
 
-export const getEmployees = async (req: Request, res: Response) => {
+export const getEmployees = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId } = req.query; // in real app, get from auth token
+    const companyId = req.user?.companyId; 
+    const userRole = req.user?.role;
+    if (!companyId) return res.status(401).json({ error: 'Unauthorized' });
+
+    let excludeRoles: string[] = [];
+    if (userRole === 'HR') {
+      excludeRoles = ['COMPANY_ADMIN', 'SUPER_ADMIN'];
+    } else if (userRole === 'MANAGER') {
+      excludeRoles = ['COMPANY_ADMIN', 'SUPER_ADMIN', 'HR'];
+    } else if (userRole === 'EMPLOYEE') {
+      excludeRoles = ['COMPANY_ADMIN', 'SUPER_ADMIN', 'HR', 'MANAGER'];
+    }
+
     const employees = await prisma.user.findMany({
-      where: { companyId: String(companyId), isDeleted: false },
+      where: { 
+        companyId: String(companyId), 
+        isDeleted: false,
+        ...(excludeRoles.length > 0 && {
+          NOT: {
+            userRoles: { some: { role: { name: { in: excludeRoles } } } }
+          }
+        })
+      },
       select: { id: true, firstName: true, lastName: true, email: true, designation: true, status: true, departmentId: true }
     });
-    res.json(employees);
+    res.json({ employees });
   } catch (error) {
     res.status(500).json({ error: 'Server error fetching employees' });
   }
 };
 
-export const createEmployee = async (req: Request, res: Response) => {
+export const createEmployee = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId, firstName, lastName, email, password, designation, departmentId } = req.body;
+    const companyId = req.user?.companyId;
+    if (!companyId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { firstName, lastName, email, password, designation, departmentId } = req.body;
     
     const existing = await prisma.user.findFirst({ where: { email } });
     if (existing) return res.status(400).json({ error: 'Email already exists' });

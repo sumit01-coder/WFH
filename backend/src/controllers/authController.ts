@@ -68,7 +68,10 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findFirst({
       where: { email, isDeleted: false },
-      include: { userRoles: { include: { role: true }, take: 1 } },
+      include: { 
+        userRoles: { include: { role: true }, take: 1 },
+        company: true
+      },
     });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -78,6 +81,10 @@ export const login = async (req: Request, res: Response) => {
     if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
 
     if (!user.companyId) return res.status(500).json({ error: 'User has no associated company' });
+
+    if (user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Your account has been suspended. Please contact your company administrator.' });
+    }
 
     const roleName = user.userRoles[0]?.role?.name ?? 'EMPLOYEE';
     const isSuperAdmin = roleName === 'SUPER_ADMIN';
@@ -101,6 +108,8 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         firstName: user.firstName,
         companyId: user.companyId,
+        companyName: user.company?.name,
+        logoUrl: user.company?.logoUrl,
         role: roleName,
         isSuperAdmin,
       },

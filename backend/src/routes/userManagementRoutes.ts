@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { requireRole } from '../middleware/requireRole';
-import { inviteUser, listCompanyUsers } from '../controllers/userManagementController';
+import { inviteUser, listCompanyUsers, toggleUserAccess } from '../controllers/userManagementController';
+import { getMyFeatures } from '../controllers/userFeaturesController';
 
 const router = Router();
 
@@ -10,5 +11,11 @@ router.post('/invite', requireAuth, requireRole('HR', 'COMPANY_ADMIN', 'SUPER_AD
 
 // Everyone in the company can see the list of users (to know their colleagues)
 router.get('/', requireAuth, listCompanyUsers as any);
+
+// Returns which sidebar features/sections are active for the logged-in user
+router.get('/me/features', requireAuth, getMyFeatures as any);
+
+// Toggle user login access (active/suspended)
+router.put('/:id/access', requireAuth, requireRole('HR', 'COMPANY_ADMIN', 'SUPER_ADMIN'), toggleUserAccess as any);
 
 export default router;

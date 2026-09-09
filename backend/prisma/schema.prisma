@@ -30,26 +30,35 @@ model Company {
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt             DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
-  users               User[]
-  departments         Department[]
-  teams               Team[]
-  projects            Project[]
-  tasks               Task[]
-  assignments         Assignment[]
-  attendance          Attendance[]
-  wfhRequests         WfhRequest[]
-  leaveRequests       LeaveRequest[]
-  workReports         WorkReport[]
-  weeklyPlans         WeeklyPlan[]
-  notifications       Notification[]
-  files               File[]
-  meetings            Meeting[]
-  chatRooms           ChatRoom[]
-  goals               Goal[]
-  performanceRecords  PerformanceRecord[]
-  aiConversations     AiConversation[]
-  userRoles           UserRole[]
-  auditLogs           AuditLog[]
+  users              User[]
+  departments        Department[]
+  teams              Team[]
+  projects           Project[]
+  tasks              Task[]
+  assignments        Assignment[]
+  attendance         Attendance[]
+  wfhRequests        WfhRequest[]
+  leaveRequests      LeaveRequest[]
+  workReports        WorkReport[]
+  weeklyPlans        WeeklyPlan[]
+  notifications      Notification[]
+  files              File[]
+  meetings           Meeting[]
+  chatRooms          ChatRoom[]
+  goals              Goal[]
+  performanceRecords PerformanceRecord[]
+  aiConversations    AiConversation[]
+  userRoles          UserRole[]
+  auditLogs          AuditLog[]
+  LeaveBalance       LeaveBalance[]
+  TimesheetEntry     TimesheetEntry[]
+  Payroll            Payroll[]
+  Expense            Expense[]
+  Asset              Asset[]
+  OnboardingTask     OnboardingTask[]
+  OffboardingTask    OffboardingTask[]
+  ActivityLog        ActivityLog[]
+  DesktopScreenshot  DesktopScreenshot[]
 
   @@index([slug])
   @@index([isActive])
@@ -69,11 +78,11 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique @db.VarChar(100)
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique @db.VarChar(100)
   description String?
-  resource    String   @db.VarChar(50)
-  action      String   @db.VarChar(50)
+  resource    String  @db.VarChar(50)
+  action      String  @db.VarChar(50)
 
   roles RolePermission[]
 
@@ -116,48 +125,57 @@ model User {
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
-  company       Company     @relation(fields: [companyId], references: [id])
-  department    Department? @relation(fields: [departmentId], references: [id])
-  team          Team?       @relation(fields: [teamId], references: [id])
-  manager       User?       @relation("ManagerSubordinates", fields: [managerId], references: [id])
-  subordinates  User[]      @relation("ManagerSubordinates")
+  company      Company     @relation(fields: [companyId], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
+  team         Team?       @relation(fields: [teamId], references: [id])
+  manager      User?       @relation("ManagerSubordinates", fields: [managerId], references: [id])
+  subordinates User[]      @relation("ManagerSubordinates")
 
-  userRoles               UserRole[]
-  refreshTokens           RefreshToken[]
-  managedDepartments      Department[] @relation("DepartmentHead")
-  managedTeams            Team[]       @relation("TeamLeader")
-  teamMemberships         TeamMember[]
-  projectMemberships      ProjectMember[]
-  managedProjects         Project[]    @relation("ProjectManager")
-  createdTasks            Task[]       @relation("TaskCreator")
-  assignedTasks           Task[]       @relation("TaskAssignee")
-  taskComments            TaskComment[]
-  taskHistory             TaskHistory[]
-  assignedAssignments     Assignment[] @relation("AssignmentAssignee")
-  createdAssignments      Assignment[] @relation("AssignmentAssignor")
-  assignmentSubmissions   AssignmentSubmission[]
-  assignmentReviews       AssignmentReview[]
-  attendance              Attendance[]
-  wfhRequests             WfhRequest[] @relation("WfhRequester")
-  reviewedWfhRequests     WfhRequest[] @relation("WfhReviewer")
-  leaveRequests           LeaveRequest[] @relation("LeaveRequester")
-  reviewedLeaveRequests   LeaveRequest[] @relation("LeaveReviewer")
-  workReports             WorkReport[] @relation("ReportSubmitter")
-  reviewedWorkReports     WorkReport[] @relation("ReportReviewer")
-  weeklyPlans             WeeklyPlan[]
-  notifications           Notification[]
-  uploadedFiles           File[]
-  organizedMeetings       Meeting[]    @relation("MeetingOrganizer")
-  meetingParticipations   MeetingParticipant[]
-  writtenMeetingNotes     MeetingNote[]
-  createdChatRooms        ChatRoom[]   @relation("ChatRoomCreator")
-  chatMemberships         ChatMember[]
-  chatMessages            ChatMessage[]
-  createdGoals            Goal[]       @relation("GoalCreator")
-  assignedGoals           Goal[]       @relation("GoalAssignee")
-  performanceRecords      PerformanceRecord[]
-  aiConversations         AiConversation[]
-  auditLogs               AuditLog[]
+  userRoles             UserRole[]
+  refreshTokens         RefreshToken[]
+  managedDepartments    Department[]           @relation("DepartmentHead")
+  managedTeams          Team[]                 @relation("TeamLeader")
+  teamMemberships       TeamMember[]
+  projectMemberships    ProjectMember[]
+  managedProjects       Project[]              @relation("ProjectManager")
+  createdTasks          Task[]                 @relation("TaskCreator")
+  assignedTasks         Task[]                 @relation("TaskAssignee")
+  taskComments          TaskComment[]
+  taskHistory           TaskHistory[]
+  assignedAssignments   Assignment[]           @relation("AssignmentAssignee")
+  createdAssignments    Assignment[]           @relation("AssignmentAssignor")
+  assignmentSubmissions AssignmentSubmission[]
+  assignmentReviews     AssignmentReview[]
+  attendance            Attendance[]
+  wfhRequests           WfhRequest[]           @relation("WfhRequester")
+  reviewedWfhRequests   WfhRequest[]           @relation("WfhReviewer")
+  leaveRequests         LeaveRequest[]         @relation("LeaveRequester")
+  reviewedLeaveRequests LeaveRequest[]         @relation("LeaveReviewer")
+  workReports           WorkReport[]           @relation("ReportSubmitter")
+  reviewedWorkReports   WorkReport[]           @relation("ReportReviewer")
+  weeklyPlans           WeeklyPlan[]
+  notifications         Notification[]
+  uploadedFiles         File[]
+  organizedMeetings     Meeting[]              @relation("MeetingOrganizer")
+  meetingParticipations MeetingParticipant[]
+  writtenMeetingNotes   MeetingNote[]
+  createdChatRooms      ChatRoom[]             @relation("ChatRoomCreator")
+  chatMemberships       ChatMember[]
+  chatMessages          ChatMessage[]
+  createdGoals          Goal[]                 @relation("GoalCreator")
+  assignedGoals         Goal[]                 @relation("GoalAssignee")
+  performanceRecords    PerformanceRecord[]
+  aiConversations       AiConversation[]
+  auditLogs             AuditLog[]
+  LeaveBalance          LeaveBalance[]
+  TimesheetEntry        TimesheetEntry[]
+  Payroll               Payroll[]
+  Expense               Expense[]
+  Asset                 Asset[]
+  OnboardingTask        OnboardingTask[]
+  OffboardingTask       OffboardingTask[]
+  ActivityLog           ActivityLog[]
+  DesktopScreenshot     DesktopScreenshot[]
 
   @@unique([companyId, email])
   @@index([companyId])
@@ -273,14 +291,15 @@ model Project {
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
-  company   Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  manager   User?           @relation("ProjectManager", fields: [managerId], references: [id])
-  team      Team?           @relation(fields: [teamId], references: [id])
-  members   ProjectMember[]
-  tasks     Task[]
-  assignments Assignment[]
-  chatRooms ChatRoom[]
-  meetings  Meeting[]
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  manager        User?            @relation("ProjectManager", fields: [managerId], references: [id])
+  team           Team?            @relation(fields: [teamId], references: [id])
+  members        ProjectMember[]
+  tasks          Task[]
+  assignments    Assignment[]
+  chatRooms      ChatRoom[]
+  meetings       Meeting[]
+  TimesheetEntry TimesheetEntry[]
 
   @@index([companyId])
   @@index([managerId])
@@ -323,16 +342,17 @@ model Task {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
-  company      Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  project      Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  parentTask   Task?               @relation("SubTasks", fields: [parentTaskId], references: [id])
-  subTasks     Task[]              @relation("SubTasks")
-  assignee     User?               @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  createdBy    User                @relation("TaskCreator", fields: [createdById], references: [id])
-  comments     TaskComment[]
-  history      TaskHistory[]
-  dependencies TaskDependency[]    @relation("DependsOn")
-  blocking     TaskDependency[]    @relation("Blocks")
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project        Project?         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentTask     Task?            @relation("SubTasks", fields: [parentTaskId], references: [id])
+  subTasks       Task[]           @relation("SubTasks")
+  assignee       User?            @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy      User             @relation("TaskCreator", fields: [createdById], references: [id])
+  comments       TaskComment[]
+  history        TaskHistory[]
+  dependencies   TaskDependency[] @relation("DependsOn")
+  blocking       TaskDependency[] @relation("Blocks")
+  TimesheetEntry TimesheetEntry[]
 
   @@index([companyId])
   @@index([projectId])
@@ -344,8 +364,8 @@ model Task {
 }
 
 model TaskDependency {
-  taskId       String @map("task_id") @db.Uuid
-  dependsOnId  String @map("depends_on_id") @db.Uuid
+  taskId      String @map("task_id") @db.Uuid
+  dependsOnId String @map("depends_on_id") @db.Uuid
 
   task      Task @relation("DependsOn", fields: [taskId], references: [id], onDelete: Cascade)
   dependsOn Task @relation("Blocks", fields: [dependsOnId], references: [id], onDelete: Cascade)
@@ -405,12 +425,12 @@ model Assignment {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
-  company      Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  project      Project?               @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignedTo   User                   @relation("AssignmentAssignee", fields: [assignedToId], references: [id])
-  assignedBy   User                   @relation("AssignmentAssignor", fields: [assignedById], references: [id])
-  submissions  AssignmentSubmission[]
-  reviews      AssignmentReview[]
+  company     Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project     Project?               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedTo  User                   @relation("AssignmentAssignee", fields: [assignedToId], references: [id])
+  assignedBy  User                   @relation("AssignmentAssignor", fields: [assignedById], references: [id])
+  submissions AssignmentSubmission[]
+  reviews     AssignmentReview[]
 
   @@index([companyId])
   @@index([projectId])
@@ -448,9 +468,9 @@ model AssignmentReview {
   comments     String?
   reviewedAt   DateTime @default(now()) @map("reviewed_at") @db.Timestamptz()
 
-  assignment  Assignment           @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  submission  AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  reviewedBy  User                 @relation(fields: [reviewedById], references: [id], onDelete: Cascade)
+  assignment Assignment           @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewedBy User                 @relation(fields: [reviewedById], references: [id], onDelete: Cascade)
 
   @@index([assignmentId])
   @@index([submissionId])
@@ -458,21 +478,21 @@ model AssignmentReview {
 }
 
 model Attendance {
-  id               String    @id @default(uuid()) @db.Uuid
-  companyId        String    @map("company_id") @db.Uuid
-  userId           String    @map("user_id") @db.Uuid
-  date             DateTime  @db.Date
-  checkInAt        DateTime? @map("check_in_at") @db.Timestamptz()
-  checkOutAt       DateTime? @map("check_out_at") @db.Timestamptz()
-  totalMinutes     Int?      @map("total_minutes")
-  breakMinutes     Int?      @map("break_minutes")
-  overtimeMinutes  Int?      @map("overtime_minutes")
-  status           String    @default("PRESENT") @db.VarChar(30)
-  isLate           Boolean   @default(false) @map("is_late")
-  isEarlyCheckout  Boolean   @default(false) @map("is_early_checkout")
-  notes            String?
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+  id              String    @id @default(uuid()) @db.Uuid
+  companyId       String    @map("company_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  date            DateTime  @db.Date
+  checkInAt       DateTime? @map("check_in_at") @db.Timestamptz()
+  checkOutAt      DateTime? @map("check_out_at") @db.Timestamptz()
+  totalMinutes    Int?      @map("total_minutes")
+  breakMinutes    Int?      @map("break_minutes")
+  overtimeMinutes Int?      @map("overtime_minutes")
+  status          String    @default("PRESENT") @db.VarChar(30)
+  isLate          Boolean   @default(false) @map("is_late")
+  isEarlyCheckout Boolean   @default(false) @map("is_early_checkout")
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
   company Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -500,19 +520,19 @@ model AttendanceBreak {
 }
 
 model WfhRequest {
-  id             String    @id @default(uuid()) @db.Uuid
-  companyId      String    @map("company_id") @db.Uuid
-  userId         String    @map("user_id") @db.Uuid
-  date           DateTime  @db.Date
-  reason         String
-  workLocation   String?   @map("work_location") @db.VarChar(255)
-  notes          String?
-  status         String    @default("PENDING") @db.VarChar(20)
-  reviewedById   String?   @map("reviewed_by_id") @db.Uuid
-  reviewedAt     DateTime? @map("reviewed_at") @db.Timestamptz()
-  reviewRemarks  String?   @map("review_remarks")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+  id            String    @id @default(uuid()) @db.Uuid
+  companyId     String    @map("company_id") @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  date          DateTime  @db.Date
+  reason        String
+  workLocation  String?   @map("work_location") @db.VarChar(255)
+  notes         String?
+  status        String    @default("PENDING") @db.VarChar(20)
+  reviewedById  String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz()
+  reviewRemarks String?   @map("review_remarks")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
   company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user       User    @relation("WfhRequester", fields: [userId], references: [id], onDelete: Cascade)
@@ -527,19 +547,19 @@ model WfhRequest {
 }
 
 model LeaveRequest {
-  id             String    @id @default(uuid()) @db.Uuid
-  companyId      String    @map("company_id") @db.Uuid
-  userId         String    @map("user_id") @db.Uuid
-  leaveType      String    @map("leave_type") @db.VarChar(50)
-  startDate      DateTime  @map("start_date") @db.Date
-  endDate        DateTime  @map("end_date") @db.Date
-  reason         String?
-  status         String    @default("PENDING") @db.VarChar(20)
-  reviewedById   String?   @map("reviewed_by_id") @db.Uuid
-  reviewedAt     DateTime? @map("reviewed_at") @db.Timestamptz()
-  reviewRemarks  String?   @map("review_remarks")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
+  id            String    @id @default(uuid()) @db.Uuid
+  companyId     String    @map("company_id") @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  leaveType     String    @map("leave_type") @db.VarChar(50)
+  startDate     DateTime  @map("start_date") @db.Date
+  endDate       DateTime  @map("end_date") @db.Date
+  reason        String?
+  status        String    @default("PENDING") @db.VarChar(20)
+  reviewedById  String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz()
+  reviewRemarks String?   @map("review_remarks")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @default(now()) @map("updated_at") @db.Timestamptz()
 
   company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user       User    @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
@@ -877,17 +897,192 @@ model AiMessage {
 }
 
 model AiToolCall {
-  id          String   @id @default(uuid()) @db.Uuid
-  messageId   String   @map("message_id") @db.Uuid
-  toolName    String   @map("tool_name") @db.VarChar(100)
-  input       Json
-  output      Json?
-  status      String   @default("PENDING") @db.VarChar(20) // PENDING, SUCCESS, ERROR
-  error       String?
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @map("message_id") @db.Uuid
+  toolName  String   @map("tool_name") @db.VarChar(100)
+  input     Json
+  output    Json?
+  status    String   @default("PENDING") @db.VarChar(20) // PENDING, SUCCESS, ERROR
+  error     String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
   message AiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
   @@map("ai_tool_calls")
+}
+
+model LeaveBalance {
+  id        String @id @default(uuid()) @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  leaveType String @map("leave_type") @db.VarChar(50)
+  totalDays Float  @map("total_days")
+  usedDays  Float  @default(0) @map("used_days")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, leaveType])
+  @@index([companyId])
+  @@index([userId])
+  @@map("leave_balances")
+}
+
+model TimesheetEntry {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  projectId   String?  @map("project_id") @db.Uuid
+  taskId      String?  @map("task_id") @db.Uuid
+  date        DateTime @db.Date
+  hours       Float
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  task    Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([projectId])
+  @@index([date])
+  @@map("timesheet_entries")
+}
+
+model Payroll {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  month       Int
+  year        Int
+  basicSalary Float    @map("basic_salary")
+  bonuses     Float    @default(0)
+  deductions  Float    @default(0)
+  netPay      Float    @map("net_pay")
+  status      String   @default("GENERATED") @db.VarChar(20) // GENERATED, PAID
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@map("payrolls")
+}
+
+model Expense {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  amount      Float
+  category    String   @db.VarChar(50) // TRAVEL, EQUIPMENT, MEALS
+  description String
+  receiptUrl  String?  @map("receipt_url")
+  status      String   @default("PENDING") @db.VarChar(20) // PENDING, APPROVED, REJECTED
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@map("expenses")
+}
+
+model Asset {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  name         String
+  category     String   @db.VarChar(50) // LAPTOP, MONITOR, SOFTWARE
+  serialNumber String?  @map("serial_number")
+  assignedToId String?  @map("assigned_to_id") @db.Uuid
+  status       String   @default("AVAILABLE") @db.VarChar(20) // AVAILABLE, ASSIGNED, MAINTENANCE
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assignedTo User?   @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([assignedToId])
+  @@map("assets")
+}
+
+model OnboardingTask {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  title       String
+  description String?
+  isCompleted Boolean  @default(false) @map("is_completed")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@map("onboarding_tasks")
+}
+
+model OffboardingTask {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  title       String
+  description String?
+  isCompleted Boolean  @default(false) @map("is_completed")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@map("offboarding_tasks")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  appName     String   @map("app_name") @db.VarChar(255)
+  windowTitle String   @map("window_title") @db.VarChar(500)
+  durationSec Int      @map("duration_sec")
+  isIdle      Boolean  @default(false) @map("is_idle")
+  recordedAt  DateTime @map("recorded_at") @db.Timestamptz()
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([recordedAt])
+  @@map("activity_logs")
+}
+
+model DesktopScreenshot {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  filePath    String   @map("file_path")
+  takenAt     DateTime @map("taken_at") @db.Timestamptz()
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([takenAt])
+  @@map("desktop_screenshots")
 }

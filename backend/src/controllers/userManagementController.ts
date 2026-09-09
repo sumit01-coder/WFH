@@ -97,3 +97,40 @@ export const listCompanyUsers = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Server error while fetching users' });
   }
 };
+
+export const toggleUserAccess = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.params['id'] as string;
+    const inviterRole = req.user!.role;
+    
+    if (inviterRole !== 'COMPANY_ADMIN' && inviterRole !== 'HR' && inviterRole !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'You do not have permission to modify user access.' });
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { userRoles: { include: { role: true } } }
+    });
+
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+    // Prevent HR from modifying another HR or Admin
+    const targetRole = targetUser.userRoles[0]?.role?.name;
+    if (inviterRole === 'HR' && (targetRole === 'COMPANY_ADMIN' || targetRole === 'SUPER_ADMIN' || targetRole === 'HR')) {
+      return res.status(403).json({ error: 'HR cannot revoke access for Admins or other HR personnel.' });
+    }
+
+    // Toggle status
+    const newStatus = targetUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    
+    await prisma.user.update({
+      where: { id: userId },
+      data: { status: newStatus }
+    });
+
+    res.json({ message: `User access ${newStatus.toLowerCase()}`, status: newStatus });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error while modifying user access' });
+  }
+};

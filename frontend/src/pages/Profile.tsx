@@ -78,12 +78,12 @@ const Profile = () => {
       MANAGER:       { label: 'Manager',       color: 'bg-orange-100 text-orange-700 border-orange-200' },
       EMPLOYEE:      { label: 'Employee',      color: 'bg-green-100 text-green-700 border-green-200' },
     };
-    return badges[role] ?? { label: role, color: 'bg-slate-100 text-slate-700 border-slate-200' };
+    return badges[role] ?? { label: role, color: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800' };
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-800">
         <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
@@ -92,7 +92,7 @@ const Profile = () => {
   const badge = getRoleBadge(profile?.role ?? 'EMPLOYEE');
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800 p-8">
       <div className="max-w-3xl mx-auto space-y-6">
 
         {saved && (
@@ -106,12 +106,12 @@ const Profile = () => {
 
         {/* Header Card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="h-32 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600" />
           <div className="px-8 pb-8">
             <div className="flex items-end justify-between -mt-12 mb-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-lg flex items-center justify-center text-3xl font-bold text-blue-600">
+                <div className="w-24 h-24 rounded-2xl bg-white dark:bg-slate-900 border-4 border-white shadow-lg flex items-center justify-center text-3xl font-bold text-blue-600">
                   {getInitials()}
                 </div>
                 <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-1.5 shadow-md hover:bg-blue-500 transition-colors">
@@ -121,7 +121,7 @@ const Profile = () => {
               <div className="flex gap-2 mt-14">
                 {editing ? (
                   <>
-                    <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors">
+                    <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:bg-slate-800 text-sm font-medium transition-colors">
                       <X size={16} /> Cancel
                     </button>
                     <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500 text-sm font-medium transition-colors shadow-sm">
@@ -129,18 +129,18 @@ const Profile = () => {
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors">
+                  <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:bg-slate-800 text-sm font-medium transition-colors">
                     <Edit3 size={16} /> Edit Profile
                   </button>
                 )}
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">{profile?.firstName} {profile?.lastName}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{profile?.firstName} {profile?.lastName}</h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}>
                 <Shield size={12} /> {badge.label}
               </span>
-              {profile?.designation && <span className="text-slate-500 text-sm">{profile.designation}</span>}
+              {profile?.designation && <span className="text-slate-500 dark:text-slate-400 text-sm">{profile.designation}</span>}
             </div>
           </div>
         </motion.div>
@@ -148,7 +148,7 @@ const Profile = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Personal Info */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-5 flex items-center gap-2">
               <User size={13} /> Personal Information
             </h2>
@@ -161,9 +161,9 @@ const Profile = () => {
                     </label>
                     {editing ? (
                       <input value={formData[field]} onChange={e => setFormData({ ...formData, [field]: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none" />
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none" />
                     ) : (
-                      <p className="text-slate-800 font-medium">{profile?.[field] || '—'}</p>
+                      <p className="text-slate-800 dark:text-slate-100 font-medium">{profile?.[field] || '—'}</p>
                     )}
                   </div>
                 ))}
@@ -174,9 +174,9 @@ const Profile = () => {
                   {editing ? (
                     <input value={formData[field]} onChange={e => setFormData({ ...formData, [field]: e.target.value })}
                       placeholder={field === 'designation' ? 'e.g. Software Engineer' : '+91 98765 43210'}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none" />
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none" />
                   ) : (
-                    <p className="text-slate-800 font-medium">{profile?.[field] || '—'}</p>
+                    <p className="text-slate-800 dark:text-slate-100 font-medium">{profile?.[field] || '—'}</p>
                   )}
                 </div>
               ))}
@@ -185,7 +185,7 @@ const Profile = () => {
 
           {/* Account Info */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-5 flex items-center gap-2">
               <Shield size={13} /> Account Details
             </h2>
@@ -202,7 +202,7 @@ const Profile = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-slate-400 font-medium">{label}</p>
-                    <p className="text-slate-800 font-medium text-sm truncate">{value}</p>
+                    <p className="text-slate-800 dark:text-slate-100 font-medium text-sm truncate">{value}</p>
                   </div>
                 </div>
               ))}

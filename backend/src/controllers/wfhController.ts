@@ -52,8 +52,38 @@ export const createWfhRequest = async (req: AuthRequest, res: Response) => {
     if (existing) return res.status(400).json({ error: 'WFH request already exists for this date' });
 
     const wfhRequest = await prisma.wfhRequest.create({
-      data: { companyId, userId, date: requestDate, reason, status: 'PENDING' }
+      data: { companyId, userId, date: requestDate, reason, status: 'PENDING' },
+      include: { user: { select: { firstName: true, lastName: true, managerId: true } } }
     });
+
+    // Notify HR and the employee's manager
+    const hrAndManagers = await prisma.user.findMany({
+      where: {
+        companyId,
+        isDeleted: false,
+        OR: [
+          { userRoles: { some: { role: { name: { in: ['HR', 'COMPANY_ADMIN'] } } } } },
+          { id: wfhRequest.user.managerId || '' }
+        ]
+      },
+      select: { id: true }
+    });
+
+    const applicantName = `${wfhRequest.user.firstName} ${wfhRequest.user.lastName}`;
+    await prisma.notification.createMany({
+      data: hrAndManagers
+        .filter(u => u.id !== userId)
+        .map(u => ({
+          companyId,
+          userId: u.id,
+          type: 'WFH',
+          title: 'New WFH Request',
+          body: `${applicantName} has requested to Work From Home on ${new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}.`,
+          resourceType: 'WFH',
+          resourceId: wfhRequest.id
+        }))
+    });
+
     res.status(201).json(wfhRequest);
   } catch (error) {
     res.status(500).json({ error: 'Server error creating WFH request' });
@@ -81,8 +111,25 @@ export const updateWfhStatus = async (req: AuthRequest, res: Response) => {
         reviewedById: userId,
         reviewRemarks,
         reviewedAt: new Date()
+      },
+      include: { user: { select: { firstName: true, lastName: true } } }
+    });
+
+    // Notify the employee about the decision
+    await prisma.notification.create({
+      data: {
+        companyId: request.companyId,
+        userId: request.userId,
+        type: 'WFH',
+        title: `WFH Request ${status === 'APPROVED' ? 'Approved ✅' : 'Rejected ❌'}`,
+        body: `Your WFH request for ${new Date(request.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} has been ${status.toLowerCase()}.${
+          reviewRemarks ? ` Remarks: ${reviewRemarks}` : ''
+        }`,
+        resourceType: 'WFH',
+        resourceId: id
       }
     });
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: 'Server error updating WFH status' });

@@ -84,6 +84,50 @@ export const checkOut = async (req: AuthRequest, res: Response) => {
         notes
       }
     });
+
+    if (req.file) {
+      await prisma.file.create({
+        data: {
+          companyId,
+          uploadedById: userId,
+          resourceType: 'ATTENDANCE',
+          resourceId: id,
+          originalName: req.file.originalname,
+          storedName: req.file.filename,
+          filePath: req.file.path,
+          mimeType: req.file.mimetype,
+          sizeBytes: BigInt(req.file.size)
+        }
+      });
+    }
+
+    // NEW: If the user had activity logs today, notify HR/Managers that they checked out
+    const hasLogs = await prisma.activityLog.findFirst({
+      where: { userId, recordedAt: { gte: attendance.date } }
+    });
+
+    if (hasLogs) {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+      const managersAndHR = await prisma.user.findMany({
+        where: { 
+          companyId, 
+          userRoles: { some: { role: { name: { in: ['HR', 'COMPANY_ADMIN', 'MANAGER'] } } } }
+        }
+      });
+      
+      const notifications = managersAndHR.map(m => ({
+        companyId,
+        userId: m.id,
+        title: 'Employee Checked Out',
+        message: `${user?.firstName} ${user?.lastName} has checked out. Their desktop activity tracking for the day has ended.`,
+        type: 'SYSTEM',
+      }));
+      
+      if (notifications.length > 0) {
+        await prisma.notification.createMany({ data: notifications });
+      }
+    }
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: 'Server error during check-out' });

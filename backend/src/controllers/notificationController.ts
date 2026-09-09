@@ -1,11 +1,12 @@
-﻿import { Request, Response } from 'express';
+import { Response } from 'express';
 import prisma from '../utils/prisma';
+import { AuthRequest } from '../middleware/requireAuth';
 
-export const getNotifications = async (req: Request, res: Response) => {
+export const getNotifications = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId, userId } = req.query;
+    const { userId, companyId } = req.user!;
     const notifications = await prisma.notification.findMany({
-      where: { companyId: String(companyId), userId: String(userId) },
+      where: { companyId, userId },
       orderBy: { createdAt: 'desc' },
       take: 50
     });
@@ -15,7 +16,19 @@ export const getNotifications = async (req: Request, res: Response) => {
   }
 };
 
-export const markAsRead = async (req: Request, res: Response) => {
+export const getUnreadCount = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId, companyId } = req.user!;
+    const count = await prisma.notification.count({
+      where: { companyId, userId, isRead: false }
+    });
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error fetching unread count' });
+  }
+};
+
+export const markAsRead = async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params['id'] as string;
     const updated = await prisma.notification.update({
@@ -28,11 +41,11 @@ export const markAsRead = async (req: Request, res: Response) => {
   }
 };
 
-export const markAllAsRead = async (req: Request, res: Response) => {
+export const markAllAsRead = async (req: AuthRequest, res: Response) => {
   try {
-    const { userId } = req.body;
+    const { userId, companyId } = req.user!;
     await prisma.notification.updateMany({
-      where: { userId },
+      where: { userId, companyId },
       data: { isRead: true }
     });
     res.json({ message: 'All notifications marked as read' });
@@ -40,3 +53,5 @@ export const markAllAsRead = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Server error updating notifications' });
   }
 };
+
+

@@ -10,13 +10,13 @@ import {
 const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: any; color: string }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-    className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"
+    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm"
   >
     <div className="flex justify-between items-start mb-4">
-      <h3 className="text-slate-500 font-medium text-sm">{title}</h3>
+      <h3 className="text-slate-500 dark:text-slate-400 font-medium text-sm">{title}</h3>
       <span className={`p-2 rounded-lg ${color}`}><Icon size={18} /></span>
     </div>
-    <p className="text-4xl font-bold text-slate-900">{value}</p>
+    <p className="text-4xl font-bold text-slate-900 dark:text-white">{value}</p>
   </motion.div>
 );
 
@@ -84,7 +84,7 @@ const DashboardHome = () => {
       <header className="flex justify-between items-center mb-10">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-3xl font-bold text-slate-900">Welcome back, {user?.firstName}! 👋</h2>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Welcome back, {user?.firstName}! 👋</h2>
           </div>
           <div className="flex items-center gap-3">
             {badge && (
@@ -92,7 +92,7 @@ const DashboardHome = () => {
                 <Shield size={11} /> {badge.label}
               </span>
             )}
-            <p className="text-slate-500 text-sm">Here's what's happening today.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Here's what's happening today.</p>
           </div>
         </div>
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-xl text-white shadow-lg">

@@ -21,7 +21,7 @@ const Goals = () => {
             <Target className="text-red-500" size={32} />
             Goals & OKRs
           </h2>
-          <p className="text-slate-500 mt-1">Track company and individual objectives.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Track company and individual objectives.</p>
         </div>
         <button className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-xl font-medium transition-colors shadow-lg shadow-red-500/20 text-white">
           Create Goal
@@ -36,23 +36,23 @@ const Goals = () => {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}
               key={goal.id} 
-              className="bg-white shadow-sm border border-slate-200 rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden"
+              className="bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden"
             >
               {/* Subtle background gradient */}
               <div className={`absolute -right-10 -top-10 w-32 h-32 bg-gradient-to-br ${goal.color} rounded-full blur-[50px] opacity-20`} />
               
               <div className="flex justify-between items-start mb-6">
-                <h3 className="text-lg font-bold text-slate-900 w-2/3">{goal.title}</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white w-2/3">{goal.title}</h3>
                 <Award className="text-slate-400" size={24} />
               </div>
               
               <div className="mb-2 flex justify-between items-end">
-                <span className="text-4xl font-black text-slate-900">{goal.current}{goal.unit}</span>
+                <span className="text-4xl font-black text-slate-900 dark:text-white">{goal.current}{goal.unit}</span>
                 <span className="text-sm text-slate-400 font-medium mb-1">/ {goal.target}{goal.unit}</span>
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full h-3 bg-white shadow-sm rounded-full overflow-hidden mt-4">
+              <div className="w-full h-3 bg-white dark:bg-slate-900 shadow-sm rounded-full overflow-hidden mt-4">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -60,7 +60,7 @@ const Goals = () => {
                   className={`h-full bg-gradient-to-r ${goal.color} rounded-full`}
                 />
               </div>
-              <div className="mt-2 text-right text-xs text-slate-500 font-bold">
+              <div className="mt-2 text-right text-xs text-slate-500 dark:text-slate-400 font-bold">
                 {progress.toFixed(1)}% Completed
               </div>
             </motion.div>
