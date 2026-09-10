@@ -132,6 +132,9 @@ const Layout = () => {
                   Powered by WorkFlowPro
                 </span>
               )}
+              <span className="text-[10px] text-slate-300 dark:text-slate-600 font-mono mt-0.5">
+                v{APP_VERSION}
+              </span>
             </div>
           )}
         </div>
@@ -202,6 +205,11 @@ const Layout = () => {
             <LogOut size={20} className="shrink-0" />
             {!isCollapsed && <span className="font-medium whitespace-nowrap overflow-hidden">Logout</span>}
           </button>
+          {!isCollapsed && (
+            <p className="text-center text-[10px] text-slate-300 dark:text-slate-700 font-mono pb-3">
+              v{APP_VERSION}
+            </p>
+          )}
         </div>
       </aside>
 
