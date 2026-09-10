@@ -27,7 +27,8 @@
       {
         "provider": "github",
         "owner": "sumit01-coder",
-        "repo": "WFH"
+        "repo": "WFH",
+        "releaseType": "release"
       }
     ]
   },
