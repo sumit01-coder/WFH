@@ -115,3 +115,8 @@ ipcMain.on('check-for-updates', () => {
 ipcMain.on('install-update', () => {
   autoUpdater.quitAndInstall()
 })
+
+// App version IPC handler — exposes real installed version to renderer
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion()
+})

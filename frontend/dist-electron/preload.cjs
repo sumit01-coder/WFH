@@ -31,15 +31,8 @@ contextBridge.exposeInMainWorld('desktopUpdater', {
   },
   removeListeners: () => ipcRenderer.removeAllListeners('updater-message')
 })
-// Desktop App Info bridge
-let _appVersion = '1.0.0';
-try {
-  _appVersion = process.env.npm_package_version || require('../package.json').version || '1.0.0';
-} catch (e) {
-  // In packaged asar, package.json path may differ — fall back to env var
-  _appVersion = process.env.npm_package_version || '1.0.0';
-}
+// Desktop App Info bridge — version is fetched async from main process
 contextBridge.exposeInMainWorld('desktopApp', {
-  version: _appVersion,
+  getVersion: () => ipcRenderer.invoke('get-app-version'),
   isElectron: true,
 })

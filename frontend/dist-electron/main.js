@@ -10121,6 +10121,6 @@ n.on("window-all-closed", () => {
 	Gn.autoUpdater.checkForUpdatesAndNotify();
 }), r.on("install-update", () => {
 	Gn.autoUpdater.quitAndInstall();
-});
+}), r.handle("get-app-version", () => n.getVersion());
 //#endregion
 export { Xn as MAIN_DIST, Zn as RENDERER_DIST, Yn as VITE_DEV_SERVER_URL };

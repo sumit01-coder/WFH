@@ -16,7 +16,18 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [appVersion, setAppVersion] = useState('...');
   const [openGroups, setOpenGroups] = useState<string[]>(['Workspace', 'Projects & Tasks', 'HR & Operations', 'Finance & IT', 'Administration']);
+
+  // Fetch real app version from Electron main process
+  useEffect(() => {
+    const desktopApp = (window as any).desktopApp;
+    if (desktopApp?.getVersion) {
+      desktopApp.getVersion().then((v: string) => setAppVersion(v)).catch(() => setAppVersion('1.0.1'));
+    } else {
+      setAppVersion('1.0.1');
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -133,7 +144,7 @@ const Layout = () => {
                 </span>
               )}
               <span className="text-[10px] text-slate-300 dark:text-slate-600 font-mono mt-0.5">
-                v{APP_VERSION}
+                v{appVersion}
               </span>
             </div>
           )}
@@ -207,7 +218,7 @@ const Layout = () => {
           </button>
           {!isCollapsed && (
             <p className="text-center text-[10px] text-slate-300 dark:text-slate-700 font-mono pb-3">
-              v{APP_VERSION}
+              v{appVersion}
             </p>
           )}
         </div>
