@@ -1,5 +1,5 @@
 import { Link, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Clock, Target, Shield, Zap, Globe, Check } from 'lucide-react';
+import { LayoutDashboard, Users, Clock, Target, Shield, Zap, Globe, Check, Laptop } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Landing = () => {
@@ -14,8 +14,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-3">
-              <img src="./logo.png" alt="Logo" className="w-10 h-10 object-contain" />
-              <span className="text-2xl font-bold tracking-tight">WorkFlow<span className="text-blue-500">Pro</span></span>
+              <img src="./logo.png" alt="Logo" className="w-16 h-16 object-contain" />
+              <span className="text-2xl font-bold tracking-tight">Work<span className="text-blue-500">Nexus</span></span>
             </div>
             <div className="hidden md:flex items-center gap-8 font-medium text-slate-600 dark:text-slate-300">
               <a href="#features" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</a>
@@ -44,14 +44,18 @@ const Landing = () => {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Like a Pro</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10">
-              WorkFlowPro brings attendance, tasks, meetings, and team chat into one unified workspace, empowering your distributed workforce to achieve more.
+              WorkNexus brings attendance, tasks, meetings, and team chat into one unified workspace, empowering your distributed workforce to achieve more.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/register" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-xl shadow-blue-500/30 transform hover:-translate-y-1">
+              <Link to="/register" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-xl shadow-blue-500/30 transform hover:-translate-y-1 flex items-center justify-center gap-2">
                 Start for Free
               </Link>
-              <a href="#features" className="w-full sm:w-auto bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm">
+              <a href="#features" className="w-full sm:w-auto bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2">
                 Explore Features
+              </a>
+              <a href="/WorkNexus_Setup_1.0.3.exe" download className="w-full sm:w-auto bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2 mt-2 sm:mt-0">
+                <Laptop size={20} />
+                Download Windows App
               </a>
             </div>
           </motion.div>
@@ -174,7 +178,7 @@ const Landing = () => {
           <Globe size={48} className="mx-auto mb-6 text-blue-400" />
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Our Mission</h2>
           <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-10">
-            At WorkFlowPro, we believe that distributed teams shouldn't mean disconnected workflows. We built this platform to bridge the gap between remote employees, HR professionals, and management, providing a unified space where work happens seamlessly, transparently, and securely.
+            At WorkNexus, we believe that distributed teams shouldn't mean disconnected workflows. We built this platform to bridge the gap between remote employees, HR professionals, and management, providing a unified space where work happens seamlessly, transparently, and securely.
           </p>
           <div className="flex justify-center gap-12 text-center">
             <div>
@@ -197,10 +201,10 @@ const Landing = () => {
       <footer className="bg-slate-950 text-slate-400 py-12 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center gap-3 mb-6 opacity-50 grayscale hover:grayscale-0 transition-all cursor-pointer">
-              <img src="./logo.png" alt="Logo" className="w-8 h-8 object-contain" />
-              <span className="text-xl font-bold tracking-tight text-white">WorkFlow<span className="text-blue-500">Pro</span></span>
+              <img src="./logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+              <span className="text-xl font-bold tracking-tight text-white">Work<span className="text-blue-500">Nexus</span></span>
           </div>
-          <p>&copy; {new Date().getFullYear()} WorkFlowPro. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} WorkNexus. All rights reserved.</p>
         </div>
       </footer>
 

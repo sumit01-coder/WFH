@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import prisma from '../utils/prisma';
 import { AuthRequest } from '../middleware/requireAuth';
 import crypto from 'crypto';
+import { getRoleRank, canModifyUser } from '../utils/rbac';
 
 export const inviteUser = async (req: AuthRequest, res: Response) => {
   try {
@@ -10,12 +11,11 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
     const inviterRole = req.user!.role;
     const companyId = req.user!.companyId;
 
-    if (inviterRole === 'EMPLOYEE' || inviterRole === 'MANAGER') {
-      return res.status(403).json({ error: 'You do not have permission to invite users.' });
-    }
+    const inviterRank = getRoleRank(inviterRole);
+    const requestedRank = getRoleRank(requestedRole);
 
-    if (inviterRole === 'HR' && (requestedRole === 'COMPANY_ADMIN' || requestedRole === 'SUPER_ADMIN' || requestedRole === 'HR')) {
-      return res.status(403).json({ error: 'HR can only invite Managers and Employees.' });
+    if (inviterRank <= requestedRank) {
+      return res.status(403).json({ error: 'You do not have permission to invite users of an equal or higher role.' });
     }
 
     const existingUser = await prisma.user.findFirst({ where: { email } });
@@ -114,10 +114,9 @@ export const toggleUserAccess = async (req: AuthRequest, res: Response) => {
 
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
-    // Prevent HR from modifying another HR or Admin
-    const targetRole = targetUser.userRoles[0]?.role?.name;
-    if (inviterRole === 'HR' && (targetRole === 'COMPANY_ADMIN' || targetRole === 'SUPER_ADMIN' || targetRole === 'HR')) {
-      return res.status(403).json({ error: 'HR cannot revoke access for Admins or other HR personnel.' });
+    const canModify = await canModifyUser(inviterRole, userId);
+    if (!canModify) {
+      return res.status(403).json({ error: 'You do not have permission to modify access for a user with an equal or higher role.' });
     }
 
     // Toggle status

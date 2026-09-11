@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -52,7 +52,7 @@ const Login = () => {
       if (!err.response) {
         // No response = server is unreachable (network error / CORS / server down)
         setServerStatus('offline');
-        setError('Cannot connect to the server. Please check your network connection or ensure the WorkFlow Pro server is running.');
+        setError('Cannot connect to the server. Please check your network connection or ensure the WorkNexus server is running.');
       } else if (err.response.status === 401 || err.response.status === 403) {
         setError(err.response.data?.error || 'Invalid email or password. Please try again.');
       } else {
@@ -79,7 +79,7 @@ const Login = () => {
         <div className="text-center mb-8">
           <img src="./logo.png" alt="Logo" className="w-16 h-16 object-contain mb-4 mx-auto" />
           <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">Welcome Back</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Sign in to your WorkFlow Pro account</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">Sign in to your WorkNexus account</p>
         </div>
 
         {/* Server Status Indicator */}
@@ -95,7 +95,7 @@ const Login = () => {
           {serverStatus === 'checking' && <Loader2 size={14} className="shrink-0 animate-spin" />}
           <span className="flex-1">
             {serverStatus === 'online' && 'Server Connected'}
-            {serverStatus === 'offline' && 'Server Unreachable — Please start the backend and try again'}
+            {serverStatus === 'offline' && 'Server Unreachable â€” Please start the backend and try again'}
             {serverStatus === 'checking' && 'Checking server connection...'}
           </span>
           {serverStatus === 'offline' && (
@@ -152,7 +152,7 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 required
                 className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder-gray-500"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -184,7 +184,7 @@ const Login = () => {
         {isDesktop ? (
           <div className="mt-6 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs text-center space-y-2 shadow-inner">
             <p className="font-semibold text-slate-800 dark:text-slate-200">Desktop Application License</p>
-            <p>By logging in, you agree to the WorkFlow Pro End User License Agreement and our privacy policy.</p>
+            <p>By logging in, you agree to the WorkNexus End User License Agreement and our privacy policy.</p>
             <div className="pt-2 mt-2 border-t border-slate-200 dark:border-slate-700/50">
               <p className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Required Permissions:</p>
               <ul className="text-left list-disc list-inside space-y-1 text-slate-500 dark:text-slate-400 pl-2">

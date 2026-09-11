@@ -1,4 +1,4 @@
-﻿# WorkFlow Pro — Database Schema
+﻿# WorkNexus — Database Schema
 
 **Version:** 1.0.0
 **Date:** 2026-09-07

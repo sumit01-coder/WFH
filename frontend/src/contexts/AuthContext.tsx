@@ -10,8 +10,14 @@ export interface User {
   lastName: string;
   companyId: string;
   companyName?: string;
+  logoUrl?: string;
   role: UserRole;
   isSuperAdmin?: boolean;
+  // Company break schedule — populated from the token or company API
+  company?: {
+    breakStart?: string; // e.g. "13:00"
+    breakEnd?: string;   // e.g. "14:00"
+  };
 }
 
 interface AuthContextType {

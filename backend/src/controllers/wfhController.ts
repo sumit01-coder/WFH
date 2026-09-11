@@ -4,12 +4,18 @@ import prisma from '../utils/prisma';
 
 export const getWfhRequests = async (req: AuthRequest, res: Response) => {
   try {
-    const { status } = req.query;
+    const { status, date } = req.query;
     const { userId, companyId, role } = req.user!;
 
     let whereClause: any = { companyId };
     
     if (status) whereClause.status = String(status);
+    if (date) {
+      const d = new Date(String(date));
+      const startOfDay = new Date(d.setUTCHours(0, 0, 0, 0));
+      const endOfDay = new Date(d.setUTCHours(23, 59, 59, 999));
+      whereClause.date = { gte: startOfDay, lte: endOfDay };
+    }
 
     if (role === 'EMPLOYEE') {
       // Employees see only their own

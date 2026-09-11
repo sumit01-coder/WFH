@@ -281,6 +281,7 @@ model Project {
   name        String    @db.VarChar(255)
   description String?
   clientName  String?   @map("client_name") @db.VarChar(255)
+  githubRepo  String?   @map("github_repo") @db.VarChar(500)
   managerId   String?   @map("manager_id") @db.Uuid
   teamId      String?   @map("team_id") @db.Uuid
   status      String    @default("PLANNING") @db.VarChar(30)
@@ -1058,6 +1059,7 @@ model ActivityLog {
   windowTitle String   @map("window_title") @db.VarChar(500)
   durationSec Int      @map("duration_sec")
   isIdle      Boolean  @default(false) @map("is_idle")
+  logType     String   @default("ACTIVITY") @map("log_type") @db.VarChar(30)
   recordedAt  DateTime @map("recorded_at") @db.Timestamptz()
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
 

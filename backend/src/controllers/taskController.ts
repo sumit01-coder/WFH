@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/requireAuth';
 import prisma from '../utils/prisma';
+import { canModifyUser } from '../utils/rbac';
+import { getIO } from '../socket';
 
 export const getTasks = async (req: AuthRequest, res: Response) => {
   try {
@@ -50,71 +52,137 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
 
 export const createTask = async (req: AuthRequest, res: Response) => {
   try {
-    const { projectId, title, description, assigneeId, status, priority, dueDate } = req.body;
+    const { projectId, title, description, assigneeId, teamId, status, priority, dueDate } = req.body;
     const { userId, companyId, role } = req.user!;
 
     if (role === 'EMPLOYEE') {
       return res.status(403).json({ error: 'Employees cannot create tasks. Tasks must be assigned by a Manager or HR.' });
     }
-    
-    if (role === 'MANAGER' && assigneeId !== userId) {
-      const assignee = await prisma.user.findUnique({ where: { id: assigneeId } });
-      if (assignee?.managerId !== userId) {
-        return res.status(403).json({ error: 'Managers can only assign tasks to their subordinates.' });
-      }
-    }
 
-    // HR, COMPANY_ADMIN, SUPER_ADMIN hierarchy check
-    if (assigneeId && assigneeId !== userId && ['HR', 'COMPANY_ADMIN'].includes(role)) {
-      const roleRanks: Record<string, number> = { 'EMPLOYEE': 1, 'MANAGER': 2, 'HR': 3, 'COMPANY_ADMIN': 4, 'SUPER_ADMIN': 5 };
-      
-      const assigneeRoles = await prisma.userRole.findMany({
-        where: { userId: assigneeId },
-        include: { role: true }
+    let targetAssignees: string[] = [];
+
+    if (teamId) {
+      // Fetch all employees in this team
+      const teamMembers = await prisma.user.findMany({
+        where: { teamId, companyId }
       });
-      
-      const assigneeMaxRank = Math.max(...assigneeRoles.map((ur: any) => roleRanks[ur.role.name] || 0));
-      const myRank = roleRanks[role] || 0;
-      
-      if (assigneeMaxRank > myRank) {
-        return res.status(403).json({ error: 'You cannot assign tasks to users with a higher role than yours.' });
-      }
+      targetAssignees = teamMembers.map((u: any) => u.id);
+    } else if (assigneeId) {
+      targetAssignees = [assigneeId];
+    } else {
+      // Unassigned
+      targetAssignees = [null as any];
     }
 
-    const task = await prisma.task.create({
-      data: {
-        companyId, 
-        projectId: projectId || null, 
-        title, 
-        description, 
-        assigneeId, 
-        createdById: userId, 
-        status, 
-        priority,
-        dueDate: dueDate ? new Date(dueDate) : null
-      },
-      include: { assignee: { select: { firstName: true, lastName: true } } }
-    });
+    const createdTasks = [];
 
-    if (assigneeId && assigneeId !== userId) {
-      await prisma.notification.create({
-        data: {
-          companyId,
-          userId: assigneeId,
-          type: 'TASK',
-          title: 'New Task Assigned',
-          body: `You have been assigned to task: ${title}`,
-          resourceType: 'TASK',
-          resourceId: task.id
+    for (const targetId of targetAssignees) {
+      if (role === 'MANAGER' && targetId && targetId !== userId) {
+        const assignee = await prisma.user.findUnique({ where: { id: targetId } });
+        if (assignee?.managerId !== userId) {
+          // Skip users that the manager doesn't manage
+          continue;
         }
+      }
+
+      // RBAC hierarchy check
+      if (targetId && targetId !== userId) {
+        const canAssign = await canModifyUser(role, targetId, true);
+        if (!canAssign) {
+          continue; // Skip users with a higher role
+        }
+      }
+
+      const task = await prisma.task.create({
+        data: {
+          companyId, 
+          projectId: projectId || null, 
+          title, 
+          description, 
+          assigneeId: targetId || null, 
+          createdById: userId, 
+          status, 
+          priority,
+          dueDate: dueDate ? new Date(dueDate) : null
+        },
+        include: { assignee: { select: { firstName: true, lastName: true } } }
       });
+
+      if (targetId && targetId !== userId) {
+        const notification = await prisma.notification.create({
+          data: {
+            companyId,
+            userId: targetId,
+            type: 'TASK',
+            title: 'New Task Assigned',
+            body: `You have been assigned to task: ${title}`,
+            resourceType: 'TASK',
+            resourceId: task.id
+          }
+        });
+        try {
+          console.log(`Emitting new_notification to user_${targetId}`);
+          getIO().to(`user_${targetId}`).emit('new_notification', notification);
+        } catch (err) {
+          console.error('Failed to emit realtime notification:', err);
+        }
+      }
+
+      createdTasks.push(task);
     }
 
-    res.status(201).json(task);
+    if (createdTasks.length === 0) {
+      return res.status(400).json({ error: 'No valid assignees found or permission denied for selected assignees.' });
+    }
+
+    // If only one task created, return the single task to maintain API compatibility
+    if (!teamId && createdTasks.length === 1) {
+      return res.status(201).json(createdTasks[0]);
+    }
+
+    res.status(201).json(createdTasks);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Server error creating task' });
   }
 };
+
+export const deleteTask = async (req: AuthRequest, res: Response) => {
+  try {
+    const taskId = req.params['id'] as string;
+    const { userId, role } = req.user!;
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId }
+    });
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    if (['EMPLOYEE', 'SUPER_ADMIN', 'COMPANY_ADMIN'].includes(role)) {
+      return res.status(403).json({ error: 'You do not have permission to delete tasks.' });
+    }
+
+    if (role === 'MANAGER') {
+      if (task.createdById !== userId) {
+        return res.status(403).json({ error: 'Managers can only delete tasks they created themselves.' });
+      }
+    }
+
+    // HR can delete any task
+
+    await prisma.task.delete({
+      where: { id: taskId }
+    });
+
+    res.json({ success: true, message: 'Task deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error deleting task' });
+  }
+};
+
 
 export const updateTaskStatus = async (req: AuthRequest, res: Response) => {
   try {

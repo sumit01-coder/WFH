@@ -1,14 +1,14 @@
-﻿# WorkFlow Pro — Feature List
+# WorkNexus — Feature List
 
-**Version:** 1.0.0
-**Date:** 2026-09-07
-**Last Updated:** 2026-09-07T14:50:46+05:30
+**Version:** 1.0.2
+**Date:** 2026-09-10
+**Last Updated:** 2026-09-10T13:10:00+05:30
 
 ---
 
-## MVP Features (v1.0) — Build First
+## MVP Features (v1.0) â€” Build First
 
-### F01 — Authentication System
+### F01 â€” Authentication System
 - [x] Email + password login
 - [x] JWT access token (15 min TTL)
 - [x] Refresh token rotation (7 days TTL)
@@ -20,7 +20,7 @@
 - [x] Session management (Redis-backed)
 - [x] Change password
 
-### F02 — Multi-Tenant Company Onboarding
+### F02 â€” Multi-Tenant Company Onboarding
 - [x] Company registration / self-onboarding
 - [x] Company profile: name, logo, email, phone, address, website, timezone
 - [x] Working days configuration (Mon-Fri, custom)
@@ -29,7 +29,7 @@
 - [x] WFH policy configuration (days per month, auto-approve threshold)
 - [x] Tenant isolation enforced on all data
 
-### F03 — Employee Management
+### F03 â€” Employee Management
 - [x] Add / edit / deactivate employees
 - [x] Employee fields: ID, name, email, phone, dept, team, designation, manager, joining date, status, photo
 - [x] Employee status: Active, Inactive, On Leave, Suspended
@@ -38,19 +38,19 @@
 - [x] Account reset
 - [x] Employee directory with search/filter
 
-### F04 — Department Management
+### F04 â€” Department Management
 - [x] Create / edit / archive departments
 - [x] Assign employees to departments
 - [x] Department head assignment
 - [x] View department members and stats
 
-### F05 — Team Management
+### F05 â€” Team Management
 - [x] Create / edit / archive teams within departments
 - [x] Add/remove team members
 - [x] Assign team leader
 - [x] View team performance summary
 
-### F06 — Project Management
+### F06 â€” Project Management
 - [x] Create projects: name, description, client, dates, manager, team, status, priority
 - [x] Project statuses: Planning, Active, On Hold, Completed, Cancelled
 - [x] Project members management
@@ -59,7 +59,7 @@
 - [x] Project comments
 - [x] Project overview dashboard
 
-### F07 — Task Management
+### F07 â€” Task Management
 - [x] Create tasks with: title, description, project, assignee, priority, status, dates, hours, labels, attachments
 - [x] Task statuses: To Do, In Progress, Blocked, Review, Completed, Cancelled
 - [x] Priorities: Low, Medium, High, Critical
@@ -75,7 +75,7 @@
 - [x] List view
 - [x] Filters: status, priority, assignee, project, date
 
-### F08 — Assignment Management
+### F08 â€” Assignment Management
 - [x] Create assignments: title, description, project, employee, assignor, priority, dates, hours, files, instructions
 - [x] Full workflow: Assigned -> In Progress -> Submitted -> Under Review -> Approved
 - [x] Rework flow: Rework Required -> Resubmitted -> Approved
@@ -83,7 +83,7 @@
 - [x] Reviewer comments per submission
 - [x] Deadline reminders (automated)
 
-### F09 — WFH Management
+### F09 â€” WFH Management
 - [x] Employee WFH request submission: date, reason, location, notes
 - [x] Statuses: Pending, Approved, Rejected, Cancelled
 - [x] Manager/HR approve/reject with remarks
@@ -91,7 +91,7 @@
 - [x] WFH policy enforcement
 - [x] WFH history per employee
 
-### F10 — Attendance System
+### F10 â€” Attendance System
 - [x] Check In / Check Out
 - [x] Start Break / End Break
 - [x] Auto-calculate: total time, break time, effective time, overtime
@@ -101,19 +101,19 @@
 - [x] Attendance calendar per employee
 - [x] Admin/HR attendance dashboard
 
-### F11 — Daily Work Reports
+### F11 â€” Daily Work Reports
 - [x] Submit report: completed work, WIP, blockers, tomorrow plan, hours, attachments
 - [x] Manager actions: approve, request changes, comment
 - [x] Report history retained
 - [x] Reminder notification at 5 PM
 - [x] Report status: Draft, Submitted, Approved, Changes Requested
 
-### F12 — Weekly Work Planning
+### F12 â€” Weekly Work Planning
 - [x] Create weekly plans per day
 - [x] Manager view of all team weekly plans
 - [x] Plans editable during the week
 
-### F13 — Manager Dashboard
+### F13 â€” Manager Dashboard
 - [x] Team summary: Total, Working Now, WFH Today, On Break, Offline
 - [x] Pending tasks count
 - [x] Overdue tasks count
@@ -122,7 +122,7 @@
 - [x] Team activity timeline
 - [x] Real-time updates via Socket.IO
 
-### F14 — Employee Dashboard
+### F14 â€” Employee Dashboard
 - [x] Today's attendance (check in/out button)
 - [x] Working hours today
 - [x] Current status
@@ -134,7 +134,7 @@
 - [x] Notifications panel
 - [x] Weekly progress
 
-### F15 — Notifications System
+### F15 â€” Notifications System
 - [x] In-app notifications
 - [x] Real-time delivery via Socket.IO
 - [x] Scheduled notifications via Redis/BullMQ
@@ -142,7 +142,7 @@
 - [x] Mark as read/unread
 - [x] Notification bell with badge count
 
-### F16 — Basic Reports
+### F16 â€” Basic Reports
 - [x] Attendance reports (daily, weekly, monthly)
 - [x] WFH reports (requests, approved, rejected)
 - [x] Task reports (by status, employee, project)
@@ -150,7 +150,7 @@
 - [x] Work report history
 - [x] Export: PDF, CSV, Excel
 
-### F17 — Audit Logs
+### F17 â€” Audit Logs
 - [x] Log all admin actions with: actor, action, target, timestamp, IP
 - [x] Login/logout logs
 - [x] Employee change logs
@@ -161,20 +161,29 @@
 - [x] File action logs
 - [x] Non-deletable by regular users
 
-### F18 — Work Timeline
+### F18 â€” Work Timeline
 - [x] Transparent activity timeline per employee
 - [x] Activities: login, task started, assignment submitted, meeting, break, logout
 - [x] Only platform-generated events (no invasive tracking)
 
-### F19 — Search & Filtering
+### F19 â€” Search & Filtering
 - [x] Global search: employees, tasks, assignments, projects, reports, files
 - [x] Filters: date, employee, department, team, project, priority, status
 
+### F20 â€” Windows Desktop Application
+- [x] Electron-based Windows installer
+- [x] Auto-updater via GitHub Releases
+- [x] Real-time version checking and download
+
+### F21 â€” Super Admin Chat
+- [x] Direct real-time chat between Super Admin and Company Admins
+- [x] Cross-tenant chat room auto-provisioning
+
 ---
 
-## Phase 2 Features (v1.5) — Add After MVP is Stable
+## Phase 2 Features (v1.5) â€” Add After MVP is Stable
 
-### F20 — Team Chat
+### F20 â€” Team Chat
 - [ ] One-to-one messaging
 - [ ] Team chat rooms
 - [ ] Project chat rooms
@@ -184,7 +193,7 @@
 - [ ] Message history
 - [ ] Real-time via Socket.IO
 
-### F21 — Meeting Management
+### F21 â€” Meeting Management
 - [ ] Schedule meetings: title, description, date, time, organizer, participants, project
 - [ ] Calendar view
 - [ ] Meeting notifications
@@ -192,20 +201,20 @@
 - [ ] Meeting notes
 - [ ] Action items from meetings
 
-### F22 — Goals & KPIs
+### F22 â€” Goals & KPIs
 - [ ] Manager creates goals: name, target, period, assigned to
 - [ ] Auto-track progress from tasks/assignments
 - [ ] Goal types: Individual, Team, Monthly, Quarterly
 - [ ] Progress visualization
 
-### F23 — Performance Analytics
+### F23 â€” Performance Analytics
 - [ ] Metrics: tasks completed, on-time %, rework rate, report submission %
 - [ ] Employee performance dashboard
 - [ ] Manager team performance view
 - [ ] Project performance analytics
 - [ ] Trend charts (weekly/monthly)
 
-### F24 — Advanced Reports
+### F24 â€” Advanced Reports
 - [ ] Custom date range reports
 - [ ] Cross-department comparison
 - [ ] Performance trend analysis
@@ -213,26 +222,26 @@
 
 ---
 
-## Phase 3 Features (v2.0) — AI & Automation
+## Phase 3 Features (v2.0) â€” AI & Automation
 
-### F25 — AI Assistant
+### F25 â€” AI Assistant
 - [ ] Natural language queries for employees and managers
 - [ ] Role-restricted data access
 - [ ] Draft daily/weekly reports
 - [ ] Task suggestions
 - [ ] Risk detection (overdue tasks/assignments)
 
-### F26 — AI Daily Summary
+### F26 â€” AI Daily Summary
 - [ ] Auto-generate end-of-day summary
 - [ ] Editable before submission
 - [ ] Includes: completed tasks, time, blockers, tomorrow plan
 
-### F27 — AI Weekly Summary
+### F27 â€” AI Weekly Summary
 - [ ] Auto-generate weekly summary
 - [ ] Metrics: tasks, assignments, on-time rate
 - [ ] Risk alerts: approaching deadlines
 
-### F28 — WebMCP Integration
+### F28 â€” WebMCP Integration
 - [ ] Controlled tool layer for AI
 - [ ] Employee tools: get_my_tasks, submit_assignment, create_work_report, etc.
 - [ ] Manager tools: get_team_summary, get_pending_assignments, etc.
@@ -240,10 +249,9 @@
 
 ---
 
-## Future Features (v3.0+) — Not in Current Scope
+## Future Features (v3.0+) â€” Not in Current Scope
 
 - Mobile Application (React Native)
-- Windows Desktop Application
 - Video Meeting Integration
 - Payroll Integration
 - Leave Management System

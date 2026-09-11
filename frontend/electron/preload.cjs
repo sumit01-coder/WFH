@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 contextBridge.exposeInMainWorld('desktopMonitor', {
   start: (token) => ipcRenderer.send('monitor:start', token),
   stop: () => ipcRenderer.send('monitor:stop'),
+  pause: () => ipcRenderer.send('monitor:pause'),
+  resume: () => ipcRenderer.send('monitor:resume'),
   isElectron: true,
 })
 
@@ -34,5 +36,23 @@ contextBridge.exposeInMainWorld('desktopUpdater', {
 // Desktop App Info bridge — version is fetched async from main process
 contextBridge.exposeInMainWorld('desktopApp', {
   getVersion: () => ipcRenderer.invoke('get-app-version'),
+  isElectron: true,
+})
+
+// Desktop Native Features bridge
+contextBridge.exposeInMainWorld('desktopNative', {
+  // Native OS Notifications
+  showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
+
+  // Always-on-Top / Focus Mode
+  setAlwaysOnTop: (isTop) => ipcRenderer.invoke('set-always-on-top', isTop),
+
+  // Auto-Launch on Startup
+  setAutoLaunch: (enable) => ipcRenderer.invoke('set-auto-launch', enable),
+  getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
+
+  // Idle Detection — returns seconds the system has been idle
+  getSystemIdleTime: () => ipcRenderer.invoke('get-system-idle-time'),
+
   isElectron: true,
 })

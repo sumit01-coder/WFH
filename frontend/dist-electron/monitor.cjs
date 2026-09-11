@@ -163,4 +163,56 @@ ipcMain.on('monitor:stop', () => {
   stopMonitoring()
 })
 
+// Pause monitoring during lunch break — keeps token, stops polling
+ipcMain.on('monitor:pause', () => {
+  logToFile('[Monitor] Pausing activity tracking for lunch break');
+  if (monitorInterval) {
+    clearInterval(monitorInterval)
+    monitorInterval = null
+  }
+  // Don't clear screenshotInterval or authToken — just pause active window polling
+  flushLogs() // flush anything buffered before pausing
+})
+
+// Resume monitoring after lunch break
+ipcMain.on('monitor:resume', () => {
+  logToFile('[Monitor] Resuming activity tracking after lunch break');
+  if (!authToken) {
+    logToFile('[Monitor] Cannot resume — no auth token');
+    return
+  }
+  if (monitorInterval) {
+    logToFile('[Monitor] Already running, skipping resume');
+    return
+  }
+  // Restart the polling loop
+  let lastApp = ''
+  let lastTitle = ''
+  let lastTime = Date.now()
+
+  monitorInterval = setInterval(async () => {
+    const { appName, windowTitle } = await getActiveWindow()
+    const now = Date.now()
+    const durationSec = Math.round((now - lastTime) / 1000)
+    lastTime = now
+
+    if (durationSec > 0) {
+      logBuffer.push({
+        appName: lastApp || appName,
+        windowTitle: lastTitle || windowTitle,
+        durationSec,
+        isIdle: false,
+        recordedAt: new Date(now - durationSec * 1000).toISOString(),
+      })
+    }
+
+    lastApp = appName
+    lastTitle = windowTitle
+
+    if (logBuffer.length >= 10) {
+      flushLogs()
+    }
+  }, 5000)
+})
+
 module.exports = { startMonitoring, stopMonitoring }

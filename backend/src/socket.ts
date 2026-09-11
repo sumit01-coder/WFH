@@ -32,6 +32,11 @@ export const initSocket = (server: HttpServer) => {
     const user = (socket as any).user;
     console.log(`Socket connected: ${socket.id} (user: ${user?.userId})`);
 
+    // Join personal notification room
+    if (user?.userId) {
+      socket.join(`user_${user.userId}`);
+    }
+
     // 🔐 Verify room membership before joining
     socket.on('join_room', async (roomId: string) => {
       try {
@@ -63,6 +68,22 @@ export const initSocket = (server: HttpServer) => {
     socket.on('typing_stop', ({ roomId, userName }: { roomId: string, userName: string }) => {
       if (socket.rooms.has(roomId)) {
         socket.to(roomId).emit('typing_stop', { userName });
+      }
+    });
+
+    // Admin Monitoring
+    socket.on('join_admin_monitoring', () => {
+      if (['HR', 'COMPANY_ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(user?.role)) {
+        socket.join(`company_${user.companyId}_monitoring`);
+      }
+    });
+
+    socket.on('monitoring_update', (data: any) => {
+      if (user?.companyId) {
+        socket.to(`company_${user.companyId}_monitoring`).emit('monitoring_update', {
+          userId: user.userId,
+          ...data
+        });
       }
     });
 

@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+﻿import dotenv from 'dotenv';
 dotenv.config(); // Must be called FIRST before any other imports read process.env
 
 import express from 'express';
@@ -37,6 +37,7 @@ import monitorRoutes from './routes/monitorRoutes';
 import { createServer } from 'http';
 import { initSocket } from './socket';
 import prisma from './utils/prisma';
+import { startAttendanceJob } from './jobs/attendanceJob';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,6 +47,9 @@ import path from 'path';
 
 // Initialize Socket.io
 initSocket(server);
+
+// Start background jobs
+startAttendanceJob();
 
 // Security: fail fast if JWT secrets are missing in production
 if (process.env.NODE_ENV === 'production') {
@@ -122,7 +126,7 @@ app.use('/api/monitor', monitorRoutes);
 
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'WorkFlow Pro API is running' });
+  res.json({ status: 'OK', message: 'WorkNexus API is running' });
 });
 
 server.listen(PORT, () => {

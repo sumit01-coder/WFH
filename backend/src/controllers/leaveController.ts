@@ -1,5 +1,6 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/requireAuth';
+import { canModifyUser } from '../utils/rbac';
 import prisma from '../utils/prisma';
 
 export const createLeaveRequest = async (req: AuthRequest, res: Response) => {
@@ -63,9 +64,21 @@ export const createLeaveRequest = async (req: AuthRequest, res: Response) => {
 export const getLeaveRequests = async (req: AuthRequest, res: Response) => {
   try {
     const { companyId, userId, role } = req.user!;
+    const { date, status } = req.query;
     
     let whereClause: any = { companyId };
     
+    if (date) {
+      const d = new Date(String(date));
+      const startOfDay = new Date(d.setUTCHours(0, 0, 0, 0));
+      whereClause.startDate = { lte: startOfDay };
+      whereClause.endDate = { gte: startOfDay };
+    }
+
+    if (status) {
+      whereClause.status = status;
+    }
+
     // If not a manager/HR/admin, only show their own leaves
     if (!['HR', 'MANAGER', 'COMPANY_ADMIN', 'SUPER_ADMIN'].includes(role)) {
       whereClause.userId = userId;
@@ -103,6 +116,11 @@ export const updateLeaveStatus = async (req: AuthRequest, res: Response) => {
 
     if (!leaveRequest) {
       return res.status(404).json({ error: 'Leave request not found' });
+    }
+
+    const canAssign = await canModifyUser(req.user!.role, leaveRequest.userId, false);
+    if (!canAssign) {
+      return res.status(403).json({ error: 'You do not have permission to approve/reject leaves for this user.' });
     }
 
     const updatedLeave = await prisma.leaveRequest.update({
@@ -168,9 +186,17 @@ export const updateLeaveStatus = async (req: AuthRequest, res: Response) => {
 
 export const getLeaveBalances = async (req: AuthRequest, res: Response) => {
   try {
-    const { userId } = req.user!;
+    const { userId, role } = req.user!;
+    const targetUserId = (req.query.userId as string) || userId;
+
+    if (targetUserId !== userId) {
+      if (!['HR', 'COMPANY_ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(role)) {
+        return res.status(403).json({ error: 'You do not have permission to view this user\'s leave balances.' });
+      }
+    }
+
     const balances = await prisma.leaveBalance.findMany({
-      where: { userId }
+      where: { userId: targetUserId }
     });
     
     // If no balances exist, return defaults
@@ -186,5 +212,91 @@ export const getLeaveBalances = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch leave balances' });
+  }
+};
+
+export const updateLeaveBalance = async (req: AuthRequest, res: Response) => {
+  try {
+    const { companyId } = req.user!;
+    const { userId, leaveType, totalDays, usedDays } = req.body;
+
+    if (!userId || !leaveType || totalDays === undefined || usedDays === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const balance = await prisma.leaveBalance.upsert({
+      where: {
+        userId_leaveType: {
+          userId,
+          leaveType
+        }
+      },
+      update: {
+        totalDays: Number(totalDays),
+        usedDays: Number(usedDays)
+      },
+      create: {
+        userId,
+        companyId,
+        leaveType,
+        totalDays: Number(totalDays),
+        usedDays: Number(usedDays)
+      }
+    });
+
+    res.json(balance);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error updating leave balance' });
+  }
+};
+
+export const updateBulkLeaveBalances = async (req: AuthRequest, res: Response) => {
+  try {
+    const { companyId } = req.user!;
+    const { leaveType, totalDays, resetUsedDays } = req.body;
+
+    if (!leaveType || totalDays === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Get all users in the company
+    const users = await prisma.user.findMany({
+      where: { companyId },
+      select: { id: true }
+    });
+
+    // We can't do updateMany for upserts easily in Prisma if records don't exist,
+    // so we iterate or use a transaction.
+    const upsertPromises = users.map(u => {
+      const updateData: any = { totalDays: Number(totalDays) };
+      if (resetUsedDays) {
+        updateData.usedDays = 0;
+      }
+
+      return prisma.leaveBalance.upsert({
+        where: {
+          userId_leaveType: {
+            userId: u.id,
+            leaveType
+          }
+        },
+        update: updateData,
+        create: {
+          userId: u.id,
+          companyId,
+          leaveType,
+          totalDays: Number(totalDays),
+          usedDays: 0
+        }
+      });
+    });
+
+    await prisma.$transaction(upsertPromises);
+
+    res.json({ success: true, message: `Updated ${leaveType} balance for ${users.length} employees.` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error bulk updating leave balances' });
   }
 };

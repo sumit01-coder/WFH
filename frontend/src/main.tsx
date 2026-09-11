@@ -6,19 +6,22 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ActivityProvider } from './contexts/ActivityContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { FeaturesProvider } from './contexts/FeaturesContext'
+import { DesktopProvider } from './contexts/DesktopContext'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HashRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <FeaturesProvider>
-            <ActivityProvider>
-              <App />
-            </ActivityProvider>
-          </FeaturesProvider>
-        </AuthProvider>
+        <DesktopProvider>
+          <AuthProvider>
+            <FeaturesProvider>
+              <ActivityProvider>
+                <App />
+              </ActivityProvider>
+            </FeaturesProvider>
+          </AuthProvider>
+        </DesktopProvider>
       </ThemeProvider>
     </HashRouter>
   </StrictMode>,

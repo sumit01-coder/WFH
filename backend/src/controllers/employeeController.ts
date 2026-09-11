@@ -28,10 +28,44 @@ export const getEmployees = async (req: AuthRequest, res: Response) => {
           }
         })
       },
-      select: { id: true, firstName: true, lastName: true, email: true, designation: true, status: true, departmentId: true }
+      select: { 
+        id: true, 
+        firstName: true, 
+        lastName: true, 
+        email: true, 
+        designation: true, 
+        status: true, 
+        departmentId: true,
+        photoUrl: true,
+        department: { select: { id: true, name: true } },
+        team: { select: { id: true, name: true } },
+        teamMemberships: {
+          select: { team: { select: { id: true, name: true, department: { select: { id: true, name: true } } } } }
+        },
+        manager: { select: { id: true, firstName: true, lastName: true } }
+      }
     });
-    res.json({ employees });
+
+    const enrichedEmployees = employees.map(emp => {
+      let team = emp.team;
+      let department = emp.department;
+
+      if (!team && emp.teamMemberships && emp.teamMemberships.length > 0) {
+        team = emp.teamMemberships[0].team;
+      }
+
+      if (!department && team && (team as any).department) {
+        department = (team as any).department;
+      }
+
+      // Remove the teamMemberships property to match the expected interface, but pass the enriched team and department
+      const { teamMemberships, ...rest } = emp;
+      return { ...rest, team, department };
+    });
+
+    res.json({ employees: enrichedEmployees });
   } catch (error) {
+    console.error('Failed to fetch employees:', error);
     res.status(500).json({ error: 'Server error fetching employees' });
   }
 };

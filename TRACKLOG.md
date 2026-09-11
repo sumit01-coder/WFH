@@ -1,4 +1,4 @@
-﻿# WorkFlow Pro — Project Track Log
+﻿# WorkNexus — Project Track Log
 
 > Auto-updated when new files are added or features are modified.
 > Every entry records: timestamp, actor, event type, file/feature affected, and description.
@@ -9,7 +9,7 @@
 
 | # | Timestamp | Event | File / Feature | Description |
 |---|-----------|-------|----------------|-------------|
-| 001 | 2026-09-07T14:49:43+05:30 | INIT | PROJECT | Project initialized — WorkFlow Pro Work Management System |
+| 001 | 2026-09-07T14:49:43+05:30 | INIT | PROJECT | Project initialized — WorkNexus Work Management System |
 | 002 | 2026-09-07T14:49:43+05:30 | CREATE | PROJECT_DESCRIPTION.md | Project description, identity, problem statement, value proposition, roadmap |
 | 003 | 2026-09-07T14:49:43+05:30 | CREATE | REQUIREMENTS.md | Full functional and non-functional requirements (FR-AUTH through NFR-UX) |
 | 004 | 2026-09-07T14:49:43+05:30 | CREATE | ARCHITECTURE.md | System architecture, multi-tenant, frontend, backend, auth, realtime, security layers |

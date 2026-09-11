@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -46,7 +46,7 @@ const Register = () => {
         <div className="text-center mb-8">
           <img src="./logo.png" alt="Logo" className="w-16 h-16 object-contain mb-4 mx-auto" />
           <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">Create Account</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Register your company on WorkFlow Pro</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">Register your company on WorkNexus</p>
         </div>
 
         {error && (
@@ -135,7 +135,7 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 required
                 className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-slate-900 dark:text-white placeholder-gray-500"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
               />

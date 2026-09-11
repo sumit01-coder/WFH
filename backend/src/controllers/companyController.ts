@@ -22,19 +22,32 @@ export const updateCompanyProfile = async (req: AuthRequest, res: Response) => {
     const companyId = req.user!.isSuperAdmin
       ? (req.params['companyId'] as string)
       : req.user!.companyId;
-    const { name, address, phone, website, email, workingDays, workingHoursStart, workingHoursEnd, timezone } = req.body;
+    const { name, address, phone, website, email, workingDays, workingHoursStart, workingHoursEnd, breakStart, breakEnd, timezone } = req.body;
     
     const updateData: any = { name, address, phone, website, email, timezone };
     
     if (workingDays) updateData.workingDays = workingDays;
     if (workingHoursStart) updateData.workingHoursStart = new Date(`1970-01-01T${workingHoursStart}:00.000Z`);
     if (workingHoursEnd) updateData.workingHoursEnd = new Date(`1970-01-01T${workingHoursEnd}:00.000Z`);
+
+    // Lunch break — allow clearing by passing empty string
+    if (breakStart) {
+      updateData.breakStart = new Date(`1970-01-01T${breakStart}:00.000Z`);
+    } else if (breakStart === '') {
+      updateData.breakStart = null;
+    }
+    if (breakEnd) {
+      updateData.breakEnd = new Date(`1970-01-01T${breakEnd}:00.000Z`);
+    } else if (breakEnd === '') {
+      updateData.breakEnd = null;
+    }
     
     const updated = await prisma.company.update({
       where: { id: companyId },
       data: updateData
     });
     res.json(updated);
+
   } catch (error) {
     res.status(500).json({ error: 'Server error updating company' });
   }

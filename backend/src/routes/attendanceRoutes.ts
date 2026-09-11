@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
-import { getAttendance, checkIn, checkOut } from '../controllers/attendanceController';
+import { getAttendance, checkIn, checkOut, startLunchBreak, endLunchBreak } from '../controllers/attendanceController';
 
 const router = Router();
 
@@ -27,5 +27,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.patch('/:id/checkout', upload.single('worklog_attachment'), checkOut as any);
+
+// Lunch break routes
+router.post('/:id/break/start', startLunchBreak as any);
+router.patch('/break/:breakId/end', endLunchBreak as any);
 
 export default router;

@@ -66,6 +66,14 @@ const Employees = () => {
     EMPLOYEE: 'bg-green-100 text-green-700'
   };
 
+  const canEditRole = (targetRole: string) => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'SUPER_ADMIN') return targetRole !== 'SUPER_ADMIN';
+    if (currentUser.role === 'COMPANY_ADMIN') return targetRole !== 'SUPER_ADMIN' && targetRole !== 'COMPANY_ADMIN';
+    if (currentUser.role === 'HR') return targetRole !== 'SUPER_ADMIN' && targetRole !== 'COMPANY_ADMIN' && targetRole !== 'HR';
+    return false;
+  };
+
   const getAvailableRoles = () => {
     if (currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'COMPANY_ADMIN') {
       return ['HR', 'MANAGER', 'EMPLOYEE'];
@@ -133,8 +141,8 @@ const Employees = () => {
                 <td className="p-4">
                   <button 
                     onClick={() => handleToggleAccess(emp.id, emp.status)}
-                    disabled={!hasRole('COMPANY_ADMIN', 'HR', 'SUPER_ADMIN') || emp.id === currentUser?.id}
-                    title={emp.id === currentUser?.id ? "You cannot suspend yourself" : (emp.status === 'ACTIVE' ? 'Click to Suspend Access' : 'Click to Reactivate Access')}
+                    disabled={!canEditRole(emp.role) || emp.id === currentUser?.id}
+                    title={emp.id === currentUser?.id ? "You cannot suspend yourself" : (!canEditRole(emp.role) ? "You do not have permission to edit this role" : (emp.status === 'ACTIVE' ? 'Click to Suspend Access' : 'Click to Reactivate Access'))}
                     className={`px-3 py-1 border rounded-full text-xs font-bold transition-colors ${
                       emp.status === 'ACTIVE' 
                         ? 'bg-green-50 text-green-600 border-green-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200' 

@@ -24,11 +24,26 @@ export const getTeams = async (req: AuthRequest, res: Response) => {
   }
 };
 
+import { canModifyUser } from '../utils/rbac';
+
 export const createTeam = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId } = req.user!;
+    const { companyId, role: requesterRole } = req.user!;
     const { name, description, leaderId, members, departmentId: reqDeptId } = req.body;
     
+    // RBAC check
+    if (leaderId) {
+      const canAssign = await canModifyUser(requesterRole, leaderId, true);
+      if (!canAssign) return res.status(403).json({ error: 'You cannot assign a user of higher role as team leader.' });
+    }
+
+    if (members && members.length > 0) {
+      for (const memberId of members) {
+        const canAssign = await canModifyUser(requesterRole, memberId, true);
+        if (!canAssign) return res.status(403).json({ error: 'You cannot add users of a higher role to this team.' });
+      }
+    }
+
     // If no department is provided, we need to create or find a default "General" department
     let departmentId = reqDeptId;
     if (!departmentId) {
@@ -88,9 +103,22 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
 
 export const updateTeam = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId } = req.user!;
+    const { companyId, role: requesterRole } = req.user!;
     const teamId = req.params.id;
     const { name, description, leaderId, members, departmentId } = req.body;
+
+    // RBAC check
+    if (leaderId) {
+      const canAssign = await canModifyUser(requesterRole, leaderId, true);
+      if (!canAssign) return res.status(403).json({ error: 'You cannot assign a user of higher role as team leader.' });
+    }
+
+    if (members && members.length > 0) {
+      for (const memberId of members) {
+        const canAssign = await canModifyUser(requesterRole, memberId, true);
+        if (!canAssign) return res.status(403).json({ error: 'You cannot add users of a higher role to this team.' });
+      }
+    }
 
     // Verify team belongs to company
     const existingTeam = await prisma.team.findFirst({

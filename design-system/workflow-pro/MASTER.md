@@ -1,4 +1,4 @@
-# Design System Master File
+﻿# Design System Master File
 
 > **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
 > If that file exists, its rules **override** this Master file.
@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** WorkFlow Pro
+**Project:** WorkNexus
 **Generated:** 2026-09-07 14:42:59
 **Category:** SaaS (General)
 
@@ -178,16 +178,16 @@
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Excessive animation
+- âŒ Excessive animation
 
 ### Additional Forbidden Patterns
 
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
+- âŒ **Emojis as icons** â€” Use SVG icons (Heroicons, Lucide, Simple Icons)
+- âŒ **Missing cursor:pointer** â€” All clickable elements must have cursor:pointer
+- âŒ **Layout-shifting hovers** â€” Avoid scale transforms that shift layout
+- âŒ **Low contrast text** â€” Maintain 4.5:1 minimum contrast ratio
+- âŒ **Instant state changes** â€” Always use transitions (150-300ms)
+- âŒ **Invisible focus states** â€” Focus states must be visible for a11y
 
 ---
 

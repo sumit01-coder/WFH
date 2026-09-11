@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -20,7 +20,7 @@ async function main() {
     where: { slug: 'workflow-pro-platform' },
     update: {},
     create: {
-      name: 'WorkFlow Pro Platform',
+      name: 'WorkNexus Platform',
       slug: 'workflow-pro-platform',
       email: 'superadmin@workflowpro.com',
       workingDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],

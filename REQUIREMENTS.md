@@ -1,4 +1,4 @@
-﻿# WorkFlow Pro — Requirements Specification
+﻿# WorkNexus — Requirements Specification
 
 **Version:** 1.0.0
 **Date:** 2026-09-07

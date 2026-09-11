@@ -57,14 +57,29 @@ export const submitExpense = async (req: AuthRequest, res: Response) => {
   }
 };
 
+import { canModifyUser } from '../utils/rbac';
+
 export const updateExpenseStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const { companyId } = req.user!;
+    const { companyId, role: requesterRole } = req.user!;
 
     if (!['APPROVED', 'REJECTED'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const expenseRequest = await prisma.expense.findFirst({
+      where: { id, companyId }
+    });
+
+    if (!expenseRequest) {
+      return res.status(404).json({ error: 'Expense request not found' });
+    }
+
+    const canAssign = await canModifyUser(requesterRole, expenseRequest.userId, false);
+    if (!canAssign) {
+      return res.status(403).json({ error: 'You do not have permission to approve/reject expenses for this user.' });
     }
 
     const expense = await prisma.expense.update({

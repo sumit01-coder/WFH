@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "frontend",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "build": {
     "appId": "com.workflowpro.app",
-    "productName": "WorkFlow Pro",
+    "productName": "WorkNexus",
     "files": [
       "dist/**/*",
       "dist-electron/**/*"

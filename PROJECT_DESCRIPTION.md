@@ -1,4 +1,4 @@
-﻿# WorkFlow Pro — Work Management System
+﻿# WorkNexus — Work Management System
 
 > **"A complete work management platform for modern teams."**
 
@@ -8,7 +8,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Project Name** | WorkFlow Pro |
+| **Project Name** | WorkNexus |
 | **Version** | 1.0.0 (MVP) |
 | **Type** | Multi-Tenant SaaS Web Platform |
 | **Category** | Work Management / WFH Management / Team Collaboration |
@@ -21,9 +21,9 @@
 
 ## Executive Summary
 
-WorkFlow Pro is a modern, cloud-based **Work Management and WFH Management Platform** designed to help organizations of all sizes manage their workforce efficiently. It bridges the gap between remote work management, task tracking, project delivery, and team collaboration in one unified platform.
+WorkNexus is a modern, cloud-based **Work Management and WFH Management Platform** designed to help organizations of all sizes manage their workforce efficiently. It bridges the gap between remote work management, task tracking, project delivery, and team collaboration in one unified platform.
 
-The system empowers employees to plan and execute their work transparently while giving managers real-time visibility into team attendance, task progress, WFH requests, assignments, and daily/weekly work reports. Unlike traditional surveillance tools, WorkFlow Pro focuses on enabling productivity rather than monitoring employees.
+The system empowers employees to plan and execute their work transparently while giving managers real-time visibility into team attendance, task progress, WFH requests, assignments, and daily/weekly work reports. Unlike traditional surveillance tools, WorkNexus focuses on enabling productivity rather than monitoring employees.
 
 ---
 
@@ -40,7 +40,7 @@ Modern companies face several challenges:
 
 ## Solution
 
-WorkFlow Pro provides a **single, integrated platform** that covers:
+WorkNexus provides a **single, integrated platform** that covers:
 
 ```
 Attendance & WFH  -->  Task & Project Management  -->  Assignment Submission & Review

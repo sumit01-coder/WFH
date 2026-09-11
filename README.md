@@ -66,6 +66,8 @@ WorkFlowPro is currently at an **Enterprise MVP (Minimum Viable Product)** stage
 - **📊 Real-Time Dashboards**: Customized widgets and analytical overviews tailored to each user's specific role in the organization.
 - **👥 Company Directory**: Secure employee onboarding through invite-only workflows and departmental groupings.
 - **📅 Leave Management & WFH**: Automated tracking of leave balances, Work From Home requests, and manager approvals.
+- **💬 Real-Time Chat & Notifications**: Built-in messaging and instant alerts via Socket.IO, keeping the entire organization connected.
+- **💻 Desktop Application**: A dedicated Windows desktop app (built with Electron) featuring automatic background updates via GitHub Releases.
 
 ---
 

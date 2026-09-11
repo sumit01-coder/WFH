@@ -72,11 +72,9 @@ async function flushLogs() {
 }
 
 // Take and upload a screenshot
-async function captureScreenshot() {
-  if (!authToken) return
+async function captureScreenshot(imgBuffer) {
+  if (!authToken || !imgBuffer) return
   try {
-    const screenshot = require('screenshot-desktop')
-    const imgBuffer = await screenshot({ format: 'jpg' })
     const formData = new FormData()
     const blob = new Blob([imgBuffer], { type: 'image/jpeg' })
     formData.append('screenshot', blob, 'screenshot.jpg')
@@ -91,6 +89,9 @@ async function captureScreenshot() {
   }
 }
 
+let monitoringSocket = null;
+let counter = 0;
+
 // Start monitoring
 function startMonitoring(token) {
   if (monitorInterval) {
@@ -101,6 +102,124 @@ function startMonitoring(token) {
 
   logToFile('[Monitor] Started activity tracking')
 
+  const { io } = require('socket.io-client');
+  monitoringSocket = io(apiBase.replace('/api', ''), {
+    auth: { token: authToken }
+  });
+
+  let lastApp = ''
+  let lastTitle = ''
+  let lastTime = Date.now()
+
+  monitorInterval = setInterval(async () => {
+    const { appName, windowTitle } = await getActiveWindow()
+    const now = Date.now()
+    const durationSec = Math.round((now - lastTime) / 1000)
+    lastTime = now
+    
+    // Simple productivity heuristic: if active window hasn't changed much? We'll just assume 100 for now.
+    const isIdle = false;
+
+    if (durationSec > 0) {
+      logBuffer.push({
+        appName: lastApp || appName,
+        windowTitle: lastTitle || windowTitle,
+        durationSec,
+        isIdle,
+        recordedAt: new Date(now - durationSec * 1000).toISOString(),
+      })
+    }
+
+    lastApp = appName
+    lastTitle = windowTitle
+
+    // Flush every 10 entries
+    if (logBuffer.length >= 10) {
+      flushLogs()
+    }
+  }, 5000) // every 5 seconds
+
+  // Flush remaining logs every 30 seconds
+  setInterval(flushLogs, 30000)
+
+  // Live Screen & DB save
+  counter = 0;
+  screenshotInterval = setInterval(async () => {
+    try {
+      const screenshot = require('screenshot-desktop')
+      const imgBuffer = await screenshot({ format: 'jpg' })
+      const base64Image = `data:image/jpeg;base64,${imgBuffer.toString('base64')}`
+      
+      monitoringSocket.emit('monitoring_update', {
+        screenshot: base64Image,
+        productivityScore: 100, // placeholder
+        timestamp: new Date().toISOString()
+      });
+
+      // Save to DB every 60 seconds (6th execution)
+      if (counter % 6 === 0) {
+        captureScreenshot(imgBuffer);
+      }
+      counter++;
+    } catch (err) {
+      logToFile('[Monitor] Live Screen error: ' + err.message);
+    }
+  }, 10000); // every 10 seconds
+}
+
+// Stop monitoring
+function stopMonitoring() {
+  if (monitoringSocket) {
+    monitoringSocket.disconnect();
+    monitoringSocket = null;
+  }
+  if (monitorInterval) {
+    clearInterval(monitorInterval)
+    monitorInterval = null
+  }
+  if (screenshotInterval) {
+    clearInterval(screenshotInterval)
+    screenshotInterval = null
+  }
+  flushLogs() // send any remaining logs
+  authToken = null
+  logToFile('[Monitor] Stopped activity tracking')
+}
+
+// IPC handlers — called from renderer (React) via preload bridge
+ipcMain.on('monitor:start', (event, token) => {
+  logToFile('[Monitor] Received monitor:start IPC');
+  startMonitoring(token)
+})
+
+ipcMain.on('monitor:stop', () => {
+  logToFile('[Monitor] Received monitor:stop IPC');
+  stopMonitoring()
+})
+
+// Pause monitoring during lunch break — keeps token, stops polling
+ipcMain.on('monitor:pause', () => {
+  logToFile('[Monitor] Pausing activity tracking for lunch break');
+  if (monitorInterval) {
+    clearInterval(monitorInterval)
+    monitorInterval = null
+  }
+  // Don't clear screenshotInterval or authToken — just pause active window polling
+  flushLogs() // flush anything buffered before pausing
+})
+
+// Resume monitoring after lunch break
+ipcMain.on('monitor:resume', () => {
+  logToFile('[Monitor] Resuming activity tracking after lunch break');
+  if (!authToken) {
+    logToFile('[Monitor] Cannot resume — no auth token');
+    return
+  }
+  if (monitorInterval) {
+    logToFile('[Monitor] Already running, skipping resume');
+    return
+  }
+  // Restart the polling loop
   let lastApp = ''
   let lastTitle = ''
   let lastTime = Date.now()
@@ -124,43 +243,10 @@ function startMonitoring(token) {
     lastApp = appName
     lastTitle = windowTitle
 
-    // Flush every 10 entries
     if (logBuffer.length >= 10) {
       flushLogs()
     }
-  }, 5000) // every 5 seconds
-
-  // Flush remaining logs every 30 seconds
-  setInterval(flushLogs, 30000)
-
-  // Screenshot every 5 minutes
-  screenshotInterval = setInterval(captureScreenshot, 5 * 60 * 1000)
-}
-
-// Stop monitoring
-function stopMonitoring() {
-  if (monitorInterval) {
-    clearInterval(monitorInterval)
-    monitorInterval = null
-  }
-  if (screenshotInterval) {
-    clearInterval(screenshotInterval)
-    screenshotInterval = null
-  }
-  flushLogs() // send any remaining logs
-  authToken = null
-  logToFile('[Monitor] Stopped activity tracking')
-}
-
-// IPC handlers — called from renderer (React) via preload bridge
-ipcMain.on('monitor:start', (event, token) => {
-  logToFile('[Monitor] Received monitor:start IPC');
-  startMonitoring(token)
-})
-
-ipcMain.on('monitor:stop', () => {
-  logToFile('[Monitor] Received monitor:stop IPC');
-  stopMonitoring()
+  }, 5000)
 })
 
 module.exports = { startMonitoring, stopMonitoring }

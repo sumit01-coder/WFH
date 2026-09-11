@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatures } from '../contexts/FeaturesContext';
+import { useDesktop } from '../contexts/DesktopContext';
 import { DesktopUpdater } from '../components/DesktopUpdater';
+import LunchBreakModal from '../components/LunchBreakModal';
+import axios from 'axios';
+import { io, Socket } from 'socket.io-client';
 import { 
   LogOut, LayoutDashboard, Users, FolderKanban, CheckSquare, Settings, Clock, Home, 
   Bell, MessageSquare, Calendar, Target, ChevronLeft, ChevronRight, UserCircle, 
@@ -13,11 +17,62 @@ import { useNavigate, Outlet, Link, useLocation, NavLink } from 'react-router-do
 const Layout = () => {
   const { user, logout, hasRole } = useAuth();
   const { features } = useFeatures();
+  const { isElectron, isIdle, idleSeconds, showNotification } = useDesktop();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [appVersion, setAppVersion] = useState('...');
   const [openGroups, setOpenGroups] = useState<string[]>(['Workspace', 'Projects & Tasks', 'HR & Operations', 'Finance & IT', 'Administration']);
+  const [showIdlePrompt, setShowIdlePrompt] = useState(false);
+  const wasIdleRef = useRef(false);
+
+  // â”€â”€ Lunch Break State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [lunchModal, setLunchModal] = useState<'start' | 'end' | null>(null);
+  const [lunchBreakId, setLunchBreakId] = useState<string | null>(null);
+  const [attendanceId, setAttendanceId] = useState<string | null>(null);
+  const [companyBreakStart, setCompanyBreakStart] = useState<string | null>(null);
+  const [companyBreakEnd, setCompanyBreakEnd] = useState<string | null>(null);
+  const lunchStartShownRef = useRef(false);
+  const lunchEndShownRef = useRef(false);
+  const lunchSnoozeUntilRef = useRef<number | null>(null);
+  const shownNotificationsRef = useRef<Set<string>>(new Set());
+
+  // â”€â”€ Global WebSocket connection for realtime notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    // 1. Fetch any unread notifications that were missed while offline
+    axios.get(`http://localhost:5000/api/notifications`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => {
+      if (Array.isArray(res.data)) {
+        const unread = res.data.filter((n: any) => !n.isRead);
+        unread.forEach((n: any) => {
+          if (!shownNotificationsRef.current.has(n.id)) {
+            showNotification(n.title || 'WorkNexus', n.body || 'You have a new notification');
+            shownNotificationsRef.current.add(n.id);
+          }
+        });
+      }
+    }).catch(err => console.error('Failed to fetch offline notifications', err));
+
+    // 2. Connect WebSocket for realtime instant notifications
+    const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const socket: Socket = io(SOCKET_URL, { auth: { token } });
+
+    socket.on('new_notification', (n: any) => {
+      console.log('Received WebSocket Notification:', n);
+      if (!shownNotificationsRef.current.has(n.id)) {
+        showNotification(n.title || 'WorkNexus', n.body || 'You have a new notification');
+        shownNotificationsRef.current.add(n.id);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [showNotification]);
 
   // Fetch real app version from Electron main process
   useEffect(() => {
@@ -28,6 +83,128 @@ const Layout = () => {
       setAppVersion('1.0.1');
     }
   }, []);
+
+  // Show idle prompt when user returns after being idle for 15+ minutes
+  useEffect(() => {
+    if (!isElectron) return;
+    if (isIdle && !wasIdleRef.current) {
+      wasIdleRef.current = true;
+    } else if (!isIdle && wasIdleRef.current) {
+      wasIdleRef.current = false;
+      setShowIdlePrompt(true);
+    }
+  }, [isIdle, isElectron]);
+
+  // â”€â”€ Fetch data & Check Time every 30 seconds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  useEffect(() => {
+    if (!user?.companyId) return;
+
+    const checkTime = async () => {
+      try {
+        // Fetch fresh company settings
+        const companyRes = await axios.get(`http://localhost:5000/api/company/${user.companyId}`);
+        const formatTime = (iso: string | null) => {
+          if (!iso) return null;
+          const d = new Date(iso);
+          return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+        };
+        const breakStartStr = formatTime(companyRes.data.breakStart);
+        const breakEndStr = formatTime(companyRes.data.breakEnd);
+        setCompanyBreakStart(breakStartStr);
+        setCompanyBreakEnd(breakEndStr);
+
+        // Fetch today's attendance
+        const today = new Date().toISOString().split('T')[0];
+        const attRes = await axios.get(`http://localhost:5000/api/attendance?date=${today}`);
+        const todayRecord = Array.isArray(attRes.data) ? attRes.data[0] : null;
+        
+        let activeAttendanceId = null;
+        let activeBreakId = null;
+
+        if (todayRecord?.id && !todayRecord.checkOutAt) {
+          activeAttendanceId = todayRecord.id;
+          setAttendanceId(activeAttendanceId);
+          // Find if there's an active break
+          const openBreak = todayRecord.breaks?.find((b: any) => !b.breakEnd);
+          if (openBreak) {
+            activeBreakId = openBreak.id;
+            setLunchBreakId(activeBreakId);
+          } else {
+            setLunchBreakId(null);
+          }
+        } else {
+          setAttendanceId(null);
+          setLunchBreakId(null);
+        }
+
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const currentTime = `${hh}:${mm}`;
+
+        // Show start prompt if we are currently within the break window AND not already on a break
+        const isDuringBreak = breakStartStr && currentTime >= breakStartStr && (!breakEndStr || currentTime < breakEndStr);
+        if (isDuringBreak && !lunchStartShownRef.current && activeAttendanceId && !activeBreakId) {
+          lunchStartShownRef.current = true;
+          setLunchModal('start');
+        }
+
+        // Show end prompt if we are past the breakEnd (and took a break)
+        if (breakEndStr && currentTime >= breakEndStr && activeBreakId && !lunchEndShownRef.current) {
+          // Check snooze
+          if (!lunchSnoozeUntilRef.current || Date.now() >= lunchSnoozeUntilRef.current) {
+            lunchEndShownRef.current = true;
+            setLunchModal('end');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync break time', err);
+      }
+    };
+
+    checkTime(); // run immediately
+    const interval = setInterval(checkTime, 30000); // check every 30s
+    return () => clearInterval(interval);
+  }, [user?.companyId]);
+
+  // â”€â”€ Lunch break handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const handleTakeLunchBreak = async () => {
+    if (!attendanceId) return;
+    try {
+      const res = await axios.post(`http://localhost:5000/api/attendance/${attendanceId}/break/start`);
+      setLunchBreakId(res.data.id);
+      // Pause desktop activity monitor
+      (window as any).desktopMonitor?.pause();
+    } catch (err) {
+      console.error('Failed to start lunch break:', err);
+    }
+    setLunchModal(null);
+  };
+
+  const handleContinueWorking = () => {
+    setLunchModal(null);
+    lunchStartShownRef.current = true; // prevent re-showing today
+  };
+
+  const handleImBack = async () => {
+    if (!lunchBreakId) return;
+    try {
+      await axios.patch(`http://localhost:5000/api/attendance/break/${lunchBreakId}/end`);
+      setLunchBreakId(null);
+      // Resume desktop activity monitor
+      (window as any).desktopMonitor?.resume();
+    } catch (err) {
+      console.error('Failed to end lunch break:', err);
+    }
+    setLunchModal(null);
+  };
+
+  const handleSnoozeBreak = () => {
+    lunchSnoozeUntilRef.current = Date.now() + 10 * 60 * 1000; // 10 min
+    lunchEndShownRef.current = false;
+    setLunchModal(null);
+  };
+
 
   const handleLogout = () => {
     logout();
@@ -140,7 +317,7 @@ const Layout = () => {
               </h1>
               {user?.companyName && (
                 <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-1">
-                  Powered by WorkFlowPro
+                  Powered by WorkNexus
                 </span>
               )}
               <span className="text-[10px] text-slate-300 dark:text-slate-600 font-mono mt-0.5">
@@ -243,8 +420,50 @@ const Layout = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Idle Return Prompt â€” shown when user returns after 15+ min of inactivity */}
+      {showIdlePrompt && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center border border-slate-200 dark:border-slate-700">
+            <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={28} className="text-amber-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Welcome back! ðŸ‘‹</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              You were away for a while. Were you on a break?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowIdlePrompt(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all"
+              >
+                I was working
+              </button>
+              <button
+                onClick={() => setShowIdlePrompt(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition-all"
+              >
+                Log as break
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lunch Break Modal */}
+      {lunchModal && (
+        <LunchBreakModal
+          mode={lunchModal}
+          breakEndTime={companyBreakEnd || undefined}
+          onTakeBreak={handleTakeLunchBreak}
+          onContinueWorking={handleContinueWorking}
+          onImBack={handleImBack}
+          onSnooze={handleSnoozeBreak}
+        />
+      )}
     </div>
   );
+
 };
 
 export default Layout;

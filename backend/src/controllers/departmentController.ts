@@ -1,11 +1,12 @@
-﻿import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../middleware/requireAuth';
 import prisma from '../utils/prisma';
 
-export const getDepartments = async (req: Request, res: Response) => {
+export const getDepartments = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId } = req.query;
+    const { companyId } = req.user!;
     const departments = await prisma.department.findMany({
-      where: { companyId: String(companyId), isActive: true }
+      where: { companyId, isActive: true }
     });
     res.json(departments);
   } catch (error) {
@@ -13,9 +14,18 @@ export const getDepartments = async (req: Request, res: Response) => {
   }
 };
 
-export const createDepartment = async (req: Request, res: Response) => {
+import { canModifyUser } from '../utils/rbac';
+
+export const createDepartment = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId, name, description, headId } = req.body;
+    const { companyId, role: requesterRole } = req.user!;
+    const { name, description, headId } = req.body;
+
+    if (headId) {
+      const canAssign = await canModifyUser(requesterRole, headId, true);
+      if (!canAssign) return res.status(403).json({ error: 'You cannot assign a user of higher role as department head.' });
+    }
+
     const department = await prisma.department.create({
       data: { companyId, name, description, headId }
     });

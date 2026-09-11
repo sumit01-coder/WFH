@@ -1,6 +1,0 @@
-fix: show real app version via IPC, fix update detection
-
-- Use app.getVersion() via ipcMain.handle in main process
-- Fetch version async in Layout.tsx via desktopApp.getVersion()
-- Sidebar now shows correct installed version instead of hardcoded fallback
-- Bump to v1.0.2

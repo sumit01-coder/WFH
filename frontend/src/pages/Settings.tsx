@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Bell, Shield, Palette, Globe, Save, Upload, Building, CreditCard, Users, CheckCircle2, DownloadCloud } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Shield, Palette, Globe, Save, Upload, Building, CreditCard, Users, CheckCircle2, DownloadCloud, Laptop, Pin, Rocket } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useDesktop } from '../contexts/DesktopContext';
 import axios from 'axios';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('general');
   const { theme, setTheme } = useTheme();
   const { hasRole, user } = useAuth();
+  const { isElectron, alwaysOnTop, setAlwaysOnTop, autoLaunch, setAutoLaunch, showNotification } = useDesktop();
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState('');
   const [companyData, setCompanyData] = useState<any>(null);
@@ -22,6 +24,8 @@ const Settings = () => {
     workingDays: [] as string[],
     workingHoursStart: '',
     workingHoursEnd: '',
+    breakStart: '',
+    breakEnd: '',
     timezone: 'UTC'
   });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -50,6 +54,8 @@ const Settings = () => {
             workingDays: res.data.workingDays || [],
             workingHoursStart: formatTimeForInput(res.data.workingHoursStart),
             workingHoursEnd: formatTimeForInput(res.data.workingHoursEnd),
+            breakStart: formatTimeForInput(res.data.breakStart),
+            breakEnd: formatTimeForInput(res.data.breakEnd),
             timezone: res.data.timezone || 'UTC'
           });
         })
@@ -66,7 +72,16 @@ const Settings = () => {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'integrations', label: 'Integrations', icon: Rocket },
   ];
+
+  const [githubToken, setGithubToken] = useState(() => localStorage.getItem('github_pat') || '');
+  
+  const handleSaveGithubToken = () => {
+    localStorage.setItem('github_pat', githubToken);
+    setUploadStatus('GitHub Token saved successfully!');
+    setTimeout(() => setUploadStatus(''), 3000);
+  };
 
   const handleLogoUpload = async () => {
     if (!logoFile || !user) return;
@@ -170,7 +185,7 @@ const Settings = () => {
                       Desktop Application Updates
                     </h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                      Keep your WorkFlow Pro desktop app up to date to get the latest features and security fixes.
+                      Keep your WorkNexus desktop app up to date to get the latest features and security fixes.
                     </p>
                     <button
                       onClick={() => (window as any).desktopUpdater.checkForUpdates()}
@@ -178,6 +193,90 @@ const Settings = () => {
                     >
                       Check for Updates Now
                     </button>
+                  </div>
+                )}
+
+                {/* Desktop Native Integrations Section */}
+                {isElectron && (
+                  <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                      <Laptop size={18} className="text-purple-500" />
+                      Desktop Integrations
+                    </h4>
+                    <div className="space-y-4">
+
+                      {/* Auto-Launch Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                            <Rocket size={18} className="text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white">Launch on System Startup</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Automatically open WorkNexus when Windows starts</p>
+                          </div>
+                        </div>
+                        <button
+                          id="toggle-auto-launch"
+                          onClick={() => setAutoLaunch(!autoLaunch)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                            autoLaunch ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
+                          }`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            autoLaunch ? 'translate-x-6' : 'translate-x-1'
+                          }`} />
+                        </button>
+                      </div>
+
+                      {/* Always-on-Top Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                            <Pin size={18} className="text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white">Focus Mode (Always on Top)</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Keep WorkNexus window above all other applications</p>
+                          </div>
+                        </div>
+                        <button
+                          id="toggle-always-on-top"
+                          onClick={() => setAlwaysOnTop(!alwaysOnTop)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                            alwaysOnTop ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
+                          }`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            alwaysOnTop ? 'translate-x-6' : 'translate-x-1'
+                          }`} />
+                        </button>
+                      </div>
+
+                      {/* Test Notification */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                            <Bell size={18} className="text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white">Native OS Notifications</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Get Windows Action Center alerts for tasks and messages</p>
+                          </div>
+                        </div>
+                        <button
+                          id="test-notification"
+                          onClick={() => showNotification('WorkNexus', '✅ Native notifications are working!')}
+                          className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+                        >
+                          Test
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-slate-400 dark:text-slate-600 flex items-center gap-1">
+                        <span>âŒ¨ï¸</span> <strong>Tip:</strong> Press <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-slate-700 dark:text-slate-300 font-mono">Ctrl+Shift+W</kbd> from anywhere to instantly show/hide the app.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -316,6 +415,7 @@ const Settings = () => {
                       );
                     })}
                   </div>
+                  {/* Working Hours */}
                   <div className="flex items-center gap-3">
                     <input 
                       type="time"
@@ -341,6 +441,43 @@ const Settings = () => {
                       <option value="IST">IST</option>
                       <option value="CET">CET</option>
                     </select>
+                  </div>
+
+                  {/* Lunch Break Time */}
+                  <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">ðŸ½ï¸</span>
+                      <h5 className="text-sm font-bold text-slate-800 dark:text-white">Lunch Break</h5>
+                      <span className="ml-auto text-xs text-slate-400">optional</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="lunch-break-start"
+                        type="time"
+                        value={profileForm.breakStart}
+                        onChange={e => setProfileForm({...profileForm, breakStart: e.target.value})}
+                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 text-slate-900 dark:text-white"
+                      />
+                      <span className="text-slate-400 font-medium">to</span>
+                      <input
+                        id="lunch-break-end"
+                        type="time"
+                        value={profileForm.breakEnd}
+                        onChange={e => setProfileForm({...profileForm, breakEnd: e.target.value})}
+                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 text-slate-900 dark:text-white"
+                      />
+                      {(profileForm.breakStart || profileForm.breakEnd) && (
+                        <button
+                          onClick={() => setProfileForm({...profileForm, breakStart: '', breakEnd: ''})}
+                          className="ml-auto text-xs text-red-400 hover:text-red-500 font-medium transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">
+                      Lunch break is automatically excluded from total working hours calculation.
+                    </p>
                   </div>
                 </div>
 
@@ -459,6 +596,47 @@ const Settings = () => {
                   >
                     <div className="w-full h-16 bg-slate-800 rounded-lg mb-2 flex items-center justify-center text-slate-500 dark:text-slate-400">Dark Mode</div>
                     <span className="font-medium text-white">Dark</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'integrations' && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white border-b dark:border-slate-800 pb-4">Integrations</h3>
+                
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl font-bold text-slate-700 dark:text-slate-300">GH</span>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">GitHub API Access</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Add a Personal Access Token to fetch commits and issues from private repositories.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Personal Access Token (PAT)</label>
+                      <input 
+                        type="password" 
+                        placeholder="ghp_xxxxxxxxxxxxxxxxx" 
+                        value={githubToken}
+                        onChange={(e) => setGithubToken(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white"
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        This token is securely stored in your local browser and is never sent to our backend.
+                      </p>
+                    </div>
+                    
+                    <button 
+                      onClick={handleSaveGithubToken}
+                      className="px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-semibold rounded-xl transition-colors shadow-sm"
+                    >
+                      Save GitHub Token
+                    </button>
                   </div>
                 </div>
               </div>

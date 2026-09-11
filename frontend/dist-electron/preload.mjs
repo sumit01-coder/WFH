@@ -1,23 +1,23 @@
-import { createRequire as e } from "node:module";
+import { createRequire } from "node:module";
 //#endregion
 //#region electron/preload.ts
-var { ipcRenderer: t, contextBridge: n } = (/* @__PURE__ */ e(import.meta.url))("electron");
-n.exposeInMainWorld("ipcRenderer", {
-	on(...e) {
-		let [n, r] = e;
-		return t.on(n, (e, ...t) => r(e, ...t));
+var { ipcRenderer, contextBridge } = (/* @__PURE__ */ (() => createRequire(import.meta.url))())("electron");
+contextBridge.exposeInMainWorld("ipcRenderer", {
+	on(...args) {
+		const [channel, listener] = args;
+		return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args));
 	},
-	off(...e) {
-		let [n, ...r] = e;
-		return t.off(n, ...r);
+	off(...args) {
+		const [channel, ...omit] = args;
+		return ipcRenderer.off(channel, ...omit);
 	},
-	send(...e) {
-		let [n, ...r] = e;
-		return t.send(n, ...r);
+	send(...args) {
+		const [channel, ...omit] = args;
+		return ipcRenderer.send(channel, ...omit);
 	},
-	invoke(...e) {
-		let [n, ...r] = e;
-		return t.invoke(n, ...r);
+	invoke(...args) {
+		const [channel, ...omit] = args;
+		return ipcRenderer.invoke(channel, ...omit);
 	}
 });
 //#endregion

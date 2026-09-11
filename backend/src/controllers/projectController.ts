@@ -4,9 +4,23 @@ import { AuthRequest } from '../middleware/requireAuth';
 
 export const getProjects = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyId } = req.user!;
+    const { companyId, userId, role } = req.user!;
+    const isAdmin = ['SUPER_ADMIN', 'COMPANY_ADMIN', 'HR'].includes(role);
+    
+    let whereClause: any = { companyId, isArchived: false };
+    
+    if (!isAdmin) {
+      whereClause = {
+        ...whereClause,
+        OR: [
+          { managerId: userId },
+          { team: { members: { some: { userId } } } }
+        ]
+      };
+    }
+
     const projects = await prisma.project.findMany({
-      where: { companyId, isArchived: false },
+      where: whereClause,
       include: { team: { select: { name: true } }, manager: { select: { firstName: true, lastName: true } } }
     });
     res.json(projects);
@@ -17,19 +31,19 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
 
 export const createProject = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, description, clientName, managerId, teamId, status, priority, startDate, endDate } = req.body;
+    const { name, description, clientName, githubRepo, managerId, teamId, status, priority, startDate, endDate } = req.body;
     const { companyId } = req.user!;
     
     const project = await prisma.project.create({
       data: {
-        companyId, name, description, clientName, managerId, teamId, status, priority,
+        companyId, name, description, clientName, githubRepo, managerId, teamId, status, priority,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null
       }
     });
 
     if (managerId && managerId !== req.user!.userId) {
-      await prisma.notification.create({
+      const notification = await prisma.notification.create({
         data: {
           companyId,
           userId: managerId,
@@ -40,6 +54,13 @@ export const createProject = async (req: AuthRequest, res: Response) => {
           resourceId: project.id
         }
       });
+      
+      try {
+        const { getIO } = require('../socket');
+        getIO().to(`user_${managerId}`).emit('new_notification', notification);
+      } catch (err) {
+        console.error('Failed to emit realtime notification:', err);
+      }
     }
 
     res.status(201).json(project);
@@ -51,7 +72,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
 export const updateProject = async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params['id'] as string;
-    const { name, description, clientName, managerId, teamId, status, priority, startDate, endDate } = req.body;
+    const { name, description, clientName, githubRepo, managerId, teamId, status, priority, startDate, endDate } = req.body;
     const { companyId, userId } = req.user!;
 
     const existingProject = await prisma.project.findUnique({ where: { id, companyId } });
@@ -64,7 +85,7 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
       const project = await tx.project.update({
         where: { id },
         data: {
-          name, description, clientName, managerId, teamId, status, priority,
+          name, description, clientName, githubRepo, managerId, teamId, status, priority,
           startDate: startDate ? new Date(startDate) : null,
           endDate: endDate ? new Date(endDate) : null
         }
