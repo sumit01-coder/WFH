@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Clock, Calendar, CheckCircle2, Play, ChevronLeft, ChevronRight, Users, Briefcase, Home, Coffee, AlertCircle, FileText, Activity, MoreVertical, Monitor } from 'lucide-react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 
 import { useAuth } from '../../contexts/AuthContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api-worknexus.virtuallabsimulator.com/api';
 
 const AdminAttendanceDashboard = () => {
   const { token } = useAuth();
@@ -403,7 +403,7 @@ const AdminAttendanceDashboard = () => {
                       {selectedEmployee.attendanceStatus}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-500 mb-1">{selectedEmployee.designation} • {selectedEmployee.department?.name || 'No Department'}</p>
+                  <p className="text-sm text-slate-500 mb-1">{selectedEmployee.designation} â€¢ {selectedEmployee.department?.name || 'No Department'}</p>
                   <p className="text-xs text-slate-400">Team: {selectedEmployee.team?.name || '-'} | Manager: {selectedEmployee.manager ? `${selectedEmployee.manager.firstName} ${selectedEmployee.manager.lastName}` : 'None'}</p>
                 </div>
               </div>

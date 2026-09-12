@@ -26,7 +26,7 @@ const Layout = () => {
   const [showIdlePrompt, setShowIdlePrompt] = useState(false);
   const wasIdleRef = useRef(false);
 
-  // â”€â”€ Lunch Break State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Lunch Break State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [lunchModal, setLunchModal] = useState<'start' | 'end' | null>(null);
   const [lunchBreakId, setLunchBreakId] = useState<string | null>(null);
   const [attendanceId, setAttendanceId] = useState<string | null>(null);
@@ -37,13 +37,13 @@ const Layout = () => {
   const lunchSnoozeUntilRef = useRef<number | null>(null);
   const shownNotificationsRef = useRef<Set<string>>(new Set());
 
-  // â”€â”€ Global WebSocket connection for realtime notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Global WebSocket connection for realtime notifications Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
     // 1. Fetch any unread notifications that were missed while offline
-    axios.get(`http://localhost:5000/api/notifications`, {
+    axios.get(`https://api-worknexus.virtuallabsimulator.com/api/notifications`, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(res => {
       if (Array.isArray(res.data)) {
@@ -58,7 +58,7 @@ const Layout = () => {
     }).catch(err => console.error('Failed to fetch offline notifications', err));
 
     // 2. Connect WebSocket for realtime instant notifications
-    const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'https://api-worknexus.virtuallabsimulator.com';
     const socket: Socket = io(SOCKET_URL, { auth: { token } });
 
     socket.on('new_notification', (n: any) => {
@@ -95,14 +95,14 @@ const Layout = () => {
     }
   }, [isIdle, isElectron]);
 
-  // â”€â”€ Fetch data & Check Time every 30 seconds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Fetch data & Check Time every 30 seconds Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     if (!user?.companyId) return;
 
     const checkTime = async () => {
       try {
         // Fetch fresh company settings
-        const companyRes = await axios.get(`http://localhost:5000/api/company/${user.companyId}`);
+        const companyRes = await axios.get(`https://api-worknexus.virtuallabsimulator.com/api/company/${user.companyId}`);
         const formatTime = (iso: string | null) => {
           if (!iso) return null;
           const d = new Date(iso);
@@ -115,7 +115,7 @@ const Layout = () => {
 
         // Fetch today's attendance
         const today = new Date().toISOString().split('T')[0];
-        const attRes = await axios.get(`http://localhost:5000/api/attendance?date=${today}`);
+        const attRes = await axios.get(`https://api-worknexus.virtuallabsimulator.com/api/attendance?date=${today}`);
         const todayRecord = Array.isArray(attRes.data) ? attRes.data[0] : null;
         
         let activeAttendanceId = null;
@@ -167,11 +167,11 @@ const Layout = () => {
     return () => clearInterval(interval);
   }, [user?.companyId]);
 
-  // â”€â”€ Lunch break handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Lunch break handlers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handleTakeLunchBreak = async () => {
     if (!attendanceId) return;
     try {
-      const res = await axios.post(`http://localhost:5000/api/attendance/${attendanceId}/break/start`);
+      const res = await axios.post(`https://api-worknexus.virtuallabsimulator.com/api/attendance/${attendanceId}/break/start`);
       setLunchBreakId(res.data.id);
       // Pause desktop activity monitor
       (window as any).desktopMonitor?.pause();
@@ -189,7 +189,7 @@ const Layout = () => {
   const handleImBack = async () => {
     if (!lunchBreakId) return;
     try {
-      await axios.patch(`http://localhost:5000/api/attendance/break/${lunchBreakId}/end`);
+      await axios.patch(`https://api-worknexus.virtuallabsimulator.com/api/attendance/break/${lunchBreakId}/end`);
       setLunchBreakId(null);
       // Resume desktop activity monitor
       (window as any).desktopMonitor?.resume();
@@ -247,6 +247,7 @@ const Layout = () => {
         { name: 'WFH', path: '/wfh', icon: Home, show: !hasRole('COMPANY_ADMIN') },
         { name: 'Reports', path: '/reports', icon: CheckSquare, show: true },
         { name: 'Performance', path: '/performance', icon: TrendingUp, show: hasRole('HR', 'MANAGER', 'COMPANY_ADMIN') },
+        { name: 'Hiring', path: '/hiring', icon: Users, show: hasRole('HR', 'COMPANY_ADMIN') },
       ]
     },
     {
@@ -304,7 +305,7 @@ const Layout = () => {
 
         <div className={`flex flex-col items-center gap-2 mt-4 mb-6 ${isCollapsed ? 'justify-center' : 'px-4'}`}>
           <img 
-            src={user?.logoUrl ? `http://localhost:5000${user.logoUrl}` : "./logo.png"} 
+            src={user?.logoUrl ? `https://api-worknexus.virtuallabsimulator.com${user.logoUrl}` : "./logo.png"} 
             alt="Logo" 
             className="w-16 h-16 object-contain shrink-0 rounded-xl" 
           />
@@ -421,14 +422,14 @@ const Layout = () => {
         </div>
       </main>
 
-      {/* Idle Return Prompt â€” shown when user returns after 15+ min of inactivity */}
+      {/* Idle Return Prompt Ã¢â‚¬â€ shown when user returns after 15+ min of inactivity */}
       {showIdlePrompt && (
         <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center border border-slate-200 dark:border-slate-700">
             <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Clock size={28} className="text-amber-500" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Welcome back! ðŸ‘‹</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Welcome back! Ã°Å¸â€˜â€¹</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
               You were away for a while. Were you on a break?
             </p>

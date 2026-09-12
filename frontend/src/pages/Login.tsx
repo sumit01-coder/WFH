@@ -1,11 +1,11 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { Mail, Lock, ArrowRight, Eye, EyeOff, Wifi, WifiOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://api-worknexus.virtuallabsimulator.com';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -152,7 +152,7 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 required
                 className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder-gray-500"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

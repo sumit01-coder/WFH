@@ -1,10 +1,9 @@
 import { Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
 import path from 'path'
 import fs from 'fs'
 import { AuthRequest } from '../middleware/requireAuth'
-
-const prisma = new PrismaClient()
+import { getIO } from '../socket'
+import prisma from '../utils/prisma'
 
 // POST /api/monitor/activity — receive batch of activity logs from desktop app
 export const logActivity = async (req: AuthRequest, res: Response) => {
@@ -33,11 +32,20 @@ export const logActivity = async (req: AuthRequest, res: Response) => {
     })
 
     res.json({ success: true })
-  } catch (err) {
+  } catch (err: any) {
+    // If Prisma's native engine panicked, reconnect and return gracefully
+    if (err?.name === 'PrismaClientRustPanicError') {
+      console.error('[Monitor] Prisma panic on activityLog, reconnecting...')
+      await prisma.$disconnect().catch(() => {})
+      await prisma.$connect().catch(() => {})
+      res.status(503).json({ error: 'Database engine restarting, please retry' })
+      return
+    }
     console.error(err)
     res.status(500).json({ error: 'Failed to save activity logs' })
   }
 }
+
 
 // POST /api/monitor/screenshot — upload a screenshot
 export const uploadScreenshot = async (req: AuthRequest, res: Response) => {
@@ -57,17 +65,38 @@ export const uploadScreenshot = async (req: AuthRequest, res: Response) => {
     const filePath = path.join(screenshotDir, filename)
     fs.writeFileSync(filePath, req.file.buffer)
 
+    const screenshotPath = `/api-uploads/screenshots/${companyId}/${userId}/${filename}`
+
     await prisma.desktopScreenshot.create({
       data: {
         companyId,
         userId,
-        filePath: `/uploads/screenshots/${companyId}/${userId}/${filename}`,
+        filePath: screenshotPath,
         takenAt: new Date(),
       },
     })
 
+    // Broadcast the new screenshot to the Live Screen
+    try {
+      getIO().to(`company_${companyId}_monitoring`).emit('monitoring_update', {
+        userId,
+        screenshot: screenshotPath,
+        timestamp: new Date().toISOString(),
+        productivityScore: 100 // Default score until we add complex calculation
+      });
+    } catch (socketErr) {
+      console.error('Failed to emit socket event:', socketErr);
+    }
+
     res.json({ success: true })
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'PrismaClientRustPanicError') {
+      console.error('[Monitor] Prisma panic on screenshot, reconnecting...')
+      await prisma.$disconnect().catch(() => {})
+      await prisma.$connect().catch(() => {})
+      res.status(503).json({ error: 'Database engine restarting, please retry' })
+      return
+    }
     console.error(err)
     res.status(500).json({ error: 'Failed to save screenshot' })
   }

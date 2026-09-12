@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -21,7 +21,7 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const response = await axios.post('https://api-worknexus.virtuallabsimulator.com/api/auth/register', formData);
       login(response.data.tokens.accessToken, response.data.user);
       navigate('/');
     } catch (err: any) {
@@ -135,7 +135,7 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 required
                 className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-slate-900 dark:text-white placeholder-gray-500"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="********"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
               />

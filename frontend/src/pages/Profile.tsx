@@ -31,7 +31,7 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/users/${user?.id}`);
+      const res = await axios.get(`https://api-worknexus.virtuallabsimulator.com/api/users/${user?.id}`);
       setProfile(res.data);
       setFormData({
         firstName: res.data.firstName || '',
@@ -163,7 +163,7 @@ const Profile = () => {
                       <input value={formData[field]} onChange={e => setFormData({ ...formData, [field]: e.target.value })}
                         className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none" />
                     ) : (
-                      <p className="text-slate-800 dark:text-slate-100 font-medium">{profile?.[field] || '—'}</p>
+                      <p className="text-slate-800 dark:text-slate-100 font-medium">{profile?.[field] || '-'}</p>
                     )}
                   </div>
                 ))}
@@ -176,7 +176,7 @@ const Profile = () => {
                       placeholder={field === 'designation' ? 'e.g. Software Engineer' : '+91 98765 43210'}
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none" />
                   ) : (
-                    <p className="text-slate-800 dark:text-slate-100 font-medium">{profile?.[field] || '—'}</p>
+                    <p className="text-slate-800 dark:text-slate-100 font-medium">{profile?.[field] || '-'}</p>
                   )}
                 </div>
               ))}
@@ -193,7 +193,7 @@ const Profile = () => {
               {[
                 { icon: Mail,      color: 'blue',   label: 'Email Address',  value: profile?.email },
                 { icon: Building2, color: 'purple',  label: 'Company',        value: profile?.company?.name ?? 'Test Company' },
-                { icon: Calendar,  color: 'green',  label: 'Member Since',   value: profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
+                { icon: Calendar,  color: 'green',  label: 'Member Since',   value: profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'â€”' },
                 { icon: Clock,     color: 'orange', label: 'User ID',        value: profile?.id },
               ].map(({ icon: Icon, color, label, value }) => (
                 <div key={label} className="flex items-start gap-3">

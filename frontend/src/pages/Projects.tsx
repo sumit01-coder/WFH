@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { FolderKanban, Plus, MoreHorizontal, Calendar, Users, X, GitBranch, GitCommit, Copy, Star, GitFork, AlertCircle, GitPullRequest, Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
 import { useAuth } from '../contexts/AuthContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api-worknexus.virtuallabsimulator.com/api';
 
 const Projects = () => {
   const { hasRole, user: currentUser } = useAuth();
@@ -594,11 +594,11 @@ const Projects = () => {
                                     <span className="font-semibold text-slate-700 dark:text-slate-300">
                                       {commit.commit.author.name}
                                     </span>
-                                    <span>•</span>
+                                    <span>â€¢</span>
                                     <a href={commit.html_url} target="_blank" rel="noopener noreferrer" className="font-mono hover:text-blue-500 transition-colors bg-slate-100 dark:bg-slate-700 px-1 rounded">
                                       {commit.sha.substring(0, 7)}
                                     </a>
-                                    <span>•</span>
+                                    <span>â€¢</span>
                                     <span>{new Date(commit.commit.author.date).toLocaleDateString()}</span>
                                   </div>
                                 </li>
@@ -622,7 +622,7 @@ const Projects = () => {
                               <p className="text-red-500 text-xs font-semibold">Failed to load</p>
                             </div>
                           ) : githubIssues.length === 0 ? (
-                            <div className="p-6 text-center text-slate-500 text-xs font-medium">No open issues or PRs. 🎉</div>
+                            <div className="p-6 text-center text-slate-500 text-xs font-medium">No open issues or PRs. ðŸŽ‰</div>
                           ) : (
                             <ul className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-56 overflow-y-auto custom-scrollbar">
                               {githubIssues.map((issue: any, idx: number) => {
@@ -638,11 +638,11 @@ const Projects = () => {
                                       </a>
                                       <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
                                         <span className="font-medium">#{issue.number}</span>
-                                        <span>•</span>
+                                        <span>â€¢</span>
                                         <span>by {issue.user.login}</span>
                                         {issue.comments > 0 && (
                                           <>
-                                            <span>•</span>
+                                            <span>â€¢</span>
                                             <span>{issue.comments} comments</span>
                                           </>
                                         )}

@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+﻿import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useAuth } from './AuthContext'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API = import.meta.env.VITE_API_URL || 'https://api-worknexus.virtuallabsimulator.com/api'
 
 interface UserFeatures {
   hasPayroll: boolean

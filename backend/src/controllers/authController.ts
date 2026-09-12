@@ -23,6 +23,8 @@ export const registerCompany = async (req: Request, res: Response) => {
           slug: companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           email,
           workingDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
+          workingHoursStart: new Date(new Date().setHours(9, 0, 0, 0)),
+          workingHoursEnd: new Date(new Date().setHours(18, 0, 0, 0)),
         },
       });
 

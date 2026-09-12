@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Bell, Shield, Palette, Globe, Save, Upload, Building, CreditCard, Users, CheckCircle2, DownloadCloud, Laptop, Pin, Rocket } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Shield, Palette, Globe, Save, Upload, Building, CreditCard, Users, CheckCircle2, DownloadCloud, Laptop, Pin, Rocket, Mail, Coffee } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,8 @@ const Settings = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState('');
   const [companyData, setCompanyData] = useState<any>(null);
+  const [isGmailConnected, setIsGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState<string | null>(null);
   
   const [profileForm, setProfileForm] = useState({
     name: '',
@@ -42,7 +44,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (hasRole('COMPANY_ADMIN', 'HR') && user?.companyId) {
-      axios.get(`http://localhost:5000/api/company/${user.companyId}`)
+      axios.get(`https://api-worknexus.virtuallabsimulator.com/api/company/${user.companyId}`)
         .then(res => {
           setCompanyData(res.data);
           setProfileForm({
@@ -61,6 +63,16 @@ const Settings = () => {
         })
         .catch(err => console.error('Failed to fetch company data:', err));
     }
+
+    // Fetch Gmail connection status
+    axios.get('https://api-worknexus.virtuallabsimulator.com/api/integrations/google/status', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => {
+        setIsGmailConnected(res.data.connected);
+        setGmailEmail(res.data.email);
+      })
+      .catch(err => console.error('Failed to fetch Gmail status:', err));
   }, [hasRole, user?.companyId]);
 
   const tabs = [
@@ -90,7 +102,7 @@ const Settings = () => {
 
     try {
       setUploadStatus('Uploading...');
-      await axios.post(`http://localhost:5000/api/company/${user.companyId}/logo`, formData, {
+      await axios.post(`https://api-worknexus.virtuallabsimulator.com/api/company/${user.companyId}/logo`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setUploadStatus('Upload successful! Please log out and log back in to see changes.');
@@ -104,7 +116,7 @@ const Settings = () => {
     if (!user) return;
     try {
       setIsSavingProfile(true);
-      await axios.put(`http://localhost:5000/api/company/${user.companyId}`, profileForm);
+      await axios.put(`https://api-worknexus.virtuallabsimulator.com/api/company/${user.companyId}`, profileForm);
       setUploadStatus('Profile updated successfully!');
       setTimeout(() => setUploadStatus(''), 3000);
     } catch (err) {
@@ -112,6 +124,31 @@ const Settings = () => {
       setUploadStatus('Failed to update profile.');
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  const handleConnectGmail = async () => {
+    try {
+      const res = await axios.get('https://api-worknexus.virtuallabsimulator.com/api/integrations/google/auth', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      }
+    } catch (error) {
+      console.error('Failed to initiate Gmail connection:', error);
+    }
+  };
+
+  const handleDisconnectGmail = async () => {
+    try {
+      await axios.post('https://api-worknexus.virtuallabsimulator.com/api/integrations/google/disconnect', {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setIsGmailConnected(false);
+      setGmailEmail(null);
+    } catch (error) {
+      console.error('Failed to disconnect Gmail:', error);
     }
   };
 
@@ -266,7 +303,7 @@ const Settings = () => {
                         </div>
                         <button
                           id="test-notification"
-                          onClick={() => showNotification('WorkNexus', '✅ Native notifications are working!')}
+                          onClick={() => showNotification('WorkNexus', 'âœ… Native notifications are working!')}
                           className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
                         >
                           Test
@@ -274,7 +311,7 @@ const Settings = () => {
                       </div>
 
                       <p className="text-xs text-slate-400 dark:text-slate-600 flex items-center gap-1">
-                        <span>âŒ¨ï¸</span> <strong>Tip:</strong> Press <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-slate-700 dark:text-slate-300 font-mono">Ctrl+Shift+W</kbd> from anywhere to instantly show/hide the app.
+                        <span>Ã¢Å’Â¨Ã¯Â¸Â</span> <strong>Tip:</strong> Press <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-slate-700 dark:text-slate-300 font-mono">Ctrl+Shift+W</kbd> from anywhere to instantly show/hide the app.
                       </p>
                     </div>
                   </div>
@@ -310,7 +347,7 @@ const Settings = () => {
                           {logoFile ? (
                             <img src={URL.createObjectURL(logoFile)} alt="Preview" className="w-full h-full object-contain" />
                           ) : companyData.logoUrl ? (
-                            <img src={`http://localhost:5000${companyData.logoUrl}`} alt="Logo" className="w-full h-full object-contain" />
+                            <img src={`https://api-worknexus.virtuallabsimulator.com${companyData.logoUrl}`} alt="Logo" className="w-full h-full object-contain" />
                           ) : (
                             <Building className="text-slate-400" size={32} />
                           )}
@@ -446,7 +483,7 @@ const Settings = () => {
                   {/* Lunch Break Time */}
                   <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-lg">ðŸ½ï¸</span>
+                      <Coffee size={18} className="text-slate-500" />
                       <h5 className="text-sm font-bold text-slate-800 dark:text-white">Lunch Break</h5>
                       <span className="ml-auto text-xs text-slate-400">optional</span>
                     </div>
@@ -636,6 +673,40 @@ const Settings = () => {
                       className="px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-semibold rounded-xl transition-colors shadow-sm"
                     >
                       Save GitHub Token
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 mt-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+                      <Mail className="text-red-500" size={24} />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">Gmail Integration</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Connect your Gmail account to enable deeper email integrations directly from WorkNexus.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {isGmailConnected ? (
+                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
+                          <CheckCircle2 size={18} /> Connected as {gmailEmail}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Not connected</div>
+                      )}
+                    </div>
+                    <button
+                      onClick={isGmailConnected ? handleDisconnectGmail : handleConnectGmail}
+                      className={`px-4 py-2 font-semibold rounded-xl transition-colors shadow-sm ${
+                        isGmailConnected 
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200 dark:hover:bg-red-900/50' 
+                          : 'bg-blue-600 hover:bg-blue-500 text-white'
+                      }`}
+                    >
+                      {isGmailConnected ? 'Disconnect' : 'Connect Gmail'}
                     </button>
                   </div>
                 </div>

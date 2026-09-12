@@ -1,4 +1,4 @@
-﻿import dotenv from 'dotenv';
+import dotenv from 'dotenv';
 dotenv.config(); // Must be called FIRST before any other imports read process.env
 
 import express from 'express';
@@ -33,6 +33,9 @@ import assetRoutes from './routes/assetRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 import offboardingRoutes from './routes/offboardingRoutes';
 import monitorRoutes from './routes/monitorRoutes';
+import integrationRoutes from './routes/integrationRoutes';
+import hiringRoutes from './routes/hiringRoutes';
+import publicRoutes from './routes/publicRoutes';
 
 import { createServer } from 'http';
 import { initSocket } from './socket';
@@ -42,6 +45,11 @@ import { startAttendanceJob } from './jobs/attendanceJob';
 const app = express();
 const PORT = process.env.PORT || 5000;
 const server = createServer(app);
+
+// Trust reverse proxy (required for Hostinger/production deployments)
+// This allows express-rate-limit to correctly read X-Forwarded-For headers
+app.set('trust proxy', 1);
+
 
 import path from 'path';
 
@@ -91,7 +99,7 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' })); // Limit request body size
 
 // Serve uploads directory
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/api-uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes); // Rate-limited auth routes
@@ -123,6 +131,9 @@ app.use('/api/assets', assetRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/offboarding', offboardingRoutes);
 app.use('/api/monitor', monitorRoutes);
+app.use('/api/integrations', integrationRoutes);
+app.use('/api/hiring', hiringRoutes);
+app.use('/api/public', publicRoutes); // Public routes (no auth required)
 
 
 app.get('/health', (req, res) => {

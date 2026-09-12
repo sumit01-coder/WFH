@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Landing from './pages/Landing';
+import DownloadPage from './pages/DownloadPage';
 import Layout from './pages/Layout';
 import DashboardHome from './pages/DashboardHome';
 import Projects from './pages/Projects';
@@ -30,6 +31,9 @@ import Assets from './pages/Assets';
 import Onboarding from './pages/Onboarding';
 import Offboarding from './pages/Offboarding';
 import ActivityMonitor from './pages/ActivityMonitor';
+import HiringDashboard from './components/hiring/HiringDashboard';
+import JobDetails from './components/hiring/JobDetails';
+import JobApplicationPage from './components/public/JobApplicationPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -41,8 +45,10 @@ function App() {
   return (
     <Routes>
       <Route path="/home" element={<Landing />} />
+      <Route path="/download" element={<DownloadPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/careers/apply/:id" element={<JobApplicationPage />} />
       <Route 
         path="/" 
         element={
@@ -76,6 +82,8 @@ function App() {
         <Route path="onboarding" element={<Onboarding />} />
         <Route path="offboarding" element={<Offboarding />} />
         <Route path="activity-monitor" element={<ActivityMonitor />} />
+        <Route path="hiring" element={<HiringDashboard />} />
+        <Route path="hiring/jobs/:id" element={<JobDetails />} />
       </Route>
     </Routes>
   );

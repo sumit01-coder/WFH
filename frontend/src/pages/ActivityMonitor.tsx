@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useAuth } from '../contexts/AuthContext'
 import { Monitor, Camera, Clock, User, ChevronDown } from 'lucide-react'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API = import.meta.env.VITE_API_URL || 'https://api-worknexus.virtuallabsimulator.com/api'
 
 interface ActivityLog {
   id: string
@@ -328,7 +328,7 @@ export default function ActivityMonitor() {
             screenshots.map(ss => (
               <div key={ss.id} className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden group">
                 <img
-                  src={`http://localhost:5000${ss.filePath}`}
+                  src={`https://api-worknexus.virtuallabsimulator.com${ss.filePath.replace('/uploads/', '/api-uploads/')}`}
                   alt="screenshot"
                   className="w-full h-40 object-cover group-hover:opacity-80 transition-opacity"
                 />

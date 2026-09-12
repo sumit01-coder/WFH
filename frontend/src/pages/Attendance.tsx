@@ -7,7 +7,7 @@ import { useActivity } from '../contexts/ActivityContext';
 import AdminAttendanceDashboard from '../components/attendance/AdminAttendanceDashboard';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api-worknexus.virtuallabsimulator.com/api';
 
 const Attendance = () => {
   const { user, hasRole, token } = useAuth();
@@ -297,6 +297,18 @@ const Attendance = () => {
   };
 
   let isPastWorkingHours = false;
+  let isHoliday = false;
+
+  const currentDayIndex = currentTime.getDay(); // 0 = Sunday
+  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const todayName = dayNames[currentDayIndex];
+
+  if (companyProfile?.workingDays && companyProfile.workingDays.length > 0) {
+    if (!companyProfile.workingDays.includes(todayName)) {
+      isHoliday = true;
+    }
+  }
+
   if (companyProfile?.workingHoursEnd) {
     const endStr = new Date(companyProfile.workingHoursEnd).toISOString().split('T')[1]; // "18:00:00.000Z"
     const [endH, endM] = endStr.split(':').map(Number);
@@ -312,12 +324,12 @@ const Attendance = () => {
     }
   }
 
-  const checkInDisabled = !isCheckedIn && isPastWorkingHours;
+  const checkInDisabled = !isCheckedIn && (isPastWorkingHours || isHoliday);
   const [adminView, setAdminView] = useState<'dashboard' | 'personal'>('dashboard');
 
   if (isAdmin && adminView === 'dashboard') {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="p-6 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto w-full">
         <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-fit mb-[-1rem]">
           <button 
             onClick={() => setAdminView('dashboard')}
@@ -411,24 +423,30 @@ const Attendance = () => {
                 )}
 
                 {!activeBreak && (
-                  <button
-                    onClick={() => isCheckedIn ? setIsCheckOutModalOpen(true) : handleCheckIn()}
-                    disabled={checkInDisabled}
-                    title={checkInDisabled ? "Office hours are over" : ""}
-                    className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full font-bold text-xl transition-all shadow-xl ${
-                      checkInDisabled 
-                        ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
-                        : isCheckedIn 
-                          ? 'bg-red-500 hover:bg-red-600 hover:scale-105 text-white shadow-red-500/30' 
-                          : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 text-white shadow-blue-600/30'
-                    }`}
-                  >
-                    {isCheckedIn ? (
-                      <><Square size={24} fill="currentColor" /> Check Out</>
-                    ) : (
-                      <><Play size={24} fill="currentColor" /> Check In</>
-                    )}
-                  </button>
+                  isHoliday && !isCheckedIn ? (
+                    <div className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full font-bold text-lg bg-slate-100 text-slate-500 border border-slate-200 shadow-sm text-center">
+                      <Calendar size={20} /> Today is Holiday
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => isCheckedIn ? setIsCheckOutModalOpen(true) : handleCheckIn()}
+                      disabled={checkInDisabled}
+                      title={checkInDisabled ? "Office hours are over" : ""}
+                      className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full font-bold text-xl transition-all shadow-xl ${
+                        checkInDisabled 
+                          ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                          : isCheckedIn 
+                            ? 'bg-red-500 hover:bg-red-600 hover:scale-105 text-white shadow-red-500/30' 
+                            : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 text-white shadow-blue-600/30'
+                      }`}
+                    >
+                      {isCheckedIn ? (
+                        <><Square size={24} fill="currentColor" /> Check Out</>
+                      ) : (
+                        <><Play size={24} fill="currentColor" /> Check In</>
+                      )}
+                    </button>
+                  )
                 )}
               </div>
             ) : (

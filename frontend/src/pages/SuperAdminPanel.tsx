@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Globe, CheckCircle2, XCircle, Users, Mail, Loader2, Calendar, CreditCard, X, Check, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api-worknexus.virtuallabsimulator.com/api';
 
 const SuperAdminPanel = () => {
   const [companies, setCompanies] = useState<any[]>([]);
@@ -87,7 +87,7 @@ const SuperAdminPanel = () => {
             <div className="mb-4">
               <h4 className="text-lg font-bold text-slate-900 dark:text-white">Starter</h4>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-slate-900 dark:text-white">₹499</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-white">â‚¹499</span>
                 <span className="text-sm font-medium text-slate-500 dark:text-slate-400">/mo</span>
               </div>
             </div>
@@ -117,7 +117,7 @@ const SuperAdminPanel = () => {
             <div className="mb-4">
               <h4 className="text-lg font-bold text-white">Professional</h4>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-white">₹999</span>
+                <span className="text-3xl font-bold text-white">â‚¹999</span>
                 <span className="text-sm font-medium text-purple-200">/mo</span>
               </div>
             </div>
@@ -146,7 +146,7 @@ const SuperAdminPanel = () => {
             <div className="mb-4">
               <h4 className="text-lg font-bold text-slate-900 dark:text-white">Enterprise</h4>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-slate-900 dark:text-white">₹1599</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-white">â‚¹1599</span>
                 <span className="text-sm font-medium text-slate-500 dark:text-slate-400">/mo</span>
               </div>
             </div>
@@ -196,7 +196,7 @@ const SuperAdminPanel = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {company.logoUrl ? (
-                      <img src={`http://localhost:5000${company.logoUrl}`} alt="Logo" className="w-12 h-12 rounded-xl object-contain bg-slate-50 dark:bg-slate-800" />
+                      <img src={`https://api-worknexus.virtuallabsimulator.com${company.logoUrl}`} alt="Logo" className="w-12 h-12 rounded-xl object-contain bg-slate-50 dark:bg-slate-800" />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center">
                         <Building2 size={24} />
@@ -362,7 +362,7 @@ const SuperAdminPanel = () => {
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start bg-slate-50 dark:bg-slate-800/50">
                 <div className="flex items-center gap-4">
                   {selectedCompany.logoUrl ? (
-                    <img src={`http://localhost:5000${selectedCompany.logoUrl}`} alt="Logo" className="w-16 h-16 rounded-xl object-contain bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700" />
+                    <img src={`https://api-worknexus.virtuallabsimulator.com${selectedCompany.logoUrl}`} alt="Logo" className="w-16 h-16 rounded-xl object-contain bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700" />
                   ) : (
                     <div className="w-16 h-16 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center shadow-sm">
                       <Building2 size={32} />

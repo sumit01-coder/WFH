@@ -18,9 +18,9 @@ const Landing = () => {
               <span className="text-2xl font-bold tracking-tight">Work<span className="text-blue-500">Nexus</span></span>
             </div>
             <div className="hidden md:flex items-center gap-8 font-medium text-slate-600 dark:text-slate-300">
-              <a href="#features" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</a>
-              <a href="#pricing" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Pricing</a>
-              <a href="#about" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About Us</a>
+              <button onClick={() => document.getElementById('features')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</button>
+              <button onClick={() => document.getElementById('pricing')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Pricing</button>
+              <button onClick={() => document.getElementById('about')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About Us</button>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login" className="text-slate-600 dark:text-slate-300 font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Log In</Link>
@@ -50,13 +50,13 @@ const Landing = () => {
               <Link to="/register" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-xl shadow-blue-500/30 transform hover:-translate-y-1 flex items-center justify-center gap-2">
                 Start for Free
               </Link>
-              <a href="#features" className="w-full sm:w-auto bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2">
+              <button onClick={() => document.getElementById('features')?.scrollIntoView({behavior: 'smooth'})} className="w-full sm:w-auto bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2">
                 Explore Features
-              </a>
-              <a href="/WorkNexus_Setup_1.0.3.exe" download className="w-full sm:w-auto bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2 mt-2 sm:mt-0">
+              </button>
+              <Link to="/download" className="w-full sm:w-auto bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2 mt-2 sm:mt-0">
                 <Laptop size={20} />
                 Download Windows App
-              </a>
+              </Link>
             </div>
           </motion.div>
         </div>

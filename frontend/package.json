@@ -1,12 +1,12 @@
-﻿{
+{
   "name": "frontend",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "electron:build": "vite build && copy electron\\preload.cjs dist-electron\\preload.cjs && copy electron\\monitor.cjs dist-electron\\monitor.cjs && electron-builder",
@@ -41,11 +41,13 @@
     "lucide-react": "^1.41.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.3",
     "screenshot-desktop": "^1.15.6",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
