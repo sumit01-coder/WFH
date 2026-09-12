@@ -1,5 +1,5 @@
-﻿const { PrismaClient } = require('@prisma/client');
-process.env.DATABASE_URL = 'mysql://u807559357_worknexus:WorkNexus%232026!@109.106.251.107:3306/u807559357_worknexus';
+const { PrismaClient } = require('@prisma/client');
+require('dotenv').config();
 
 const prisma = new PrismaClient();
 prisma.$connect()
